@@ -1,0 +1,249 @@
+{% load staticfiles %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ content }}</title>
+    <!-- 新 Bootstrap 核心 CSS 文件 -->
+<link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+
+<!-- 可选的Bootstrap主题文件（一般不用引入） -->
+<link rel="stylesheet" href="{%  static 'css/bootstrap-theme.min.css' %}">
+
+<!-- jQuery文件。务必在bootstrap.min.js 之前引入 -->
+<script src="{%  static 'js/jquery-2.0.0.min.js' %} "></script>
+
+<!-- 最新的 Bootstrap 核心 JavaScript 文件 -->
+<script src="{%  static 'js/bootstrap.min.js' %}"></script>
+
+<script type="text/javascript">
+
+function search_click()
+{
+			var value = $("input#input_btn").val();
+			var search_str  = "/search/";
+			if (value != "")
+			{
+				search_str = "/search/"+value+"/";
+			}
+			else
+			{
+				return;
+			}
+
+			$.get(search_str,function(data,status){
+				$("#search_ooid").text(value);
+				$("#result_body").html(data);
+				$("#myModal").modal('show');});
+}
+
+$(document).ready(function(){
+$("button#search_btn").click(function(){
+search_click();});
+});
+</script>
+
+</head>
+<body>
+<div class="container-fluid">
+	<div class="row-fluid">
+		<div class="span12">
+            <div class="row-fluid">
+				<div class="span6">
+					<h3 class="text-info">
+						{{ index_model_name }} Contents
+					</h3>
+				</div>
+				<div class="span6">
+					<h3 class="text-right">
+						<form class="form-search" onsubmit=" search_click();return false" >
+							<input class="input-medium search-query" id="input_btn" type="text" placeholder="Type ooid"  /> <button id="search_btn" class="btn" type="button" >查找</button>
+						</form>
+					</h3>
+				</div>
+            </div>
+    <!-- Button to trigger modal -->
+    <!--<a href="#myModal" role="button" class="btn" data-toggle="modal">查看演示案例</a> -->
+     
+    <!-- Modal -->
+    <div id="myModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h3 id="search_ooid">Modal header</h3>
+      </div>
+      <div class="modal-body" id="result_body">
+        <p>One fine body…</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" data-dismiss="modal" aria-hidden="true">关闭</button>
+      </div>
+    </div>
+			<table class="table">
+				<thead>
+					<tr>
+						<th>
+							ooid
+						</th>
+						<th>
+							side
+						</th>
+						<th>
+							qty
+						</th>
+						<th>
+							otype
+						</th>
+						<th>
+							lmtpx
+						</th>
+						<th>
+							pqty
+						</th>
+						<th>
+							potype
+						</th>
+                        <th>
+                            plmptx
+                        </th>
+                        <th>
+                            tif
+                        </th>
+                        <th>
+                            oc
+                        </th>
+                        <th>
+                            qfilled
+                        </th>
+                        <th>
+                            qopen
+                        </th>
+                        <th>
+                            state
+                        </th>
+                        <th>
+                            cstate
+                        </th>
+                        <th>
+                            rstate
+                        </th>
+                         <th>
+                            detail
+                        </th>
+					</tr>
+				</thead>
+				<tbody>
+                        {% for order in OrderAck_List %}
+                            {% if forloop.counter0 == 0 %}
+                                <tr class="{% cycle 'success' 'error' 'info' 'warning' as infotype %}">
+                                    {% else %}
+                                <tr class="{% cycle infotype %}">
+                            {% endif %}
+                            <td>
+                                {{ order.ooid }}
+                            </td>
+                            <td>
+                                {{ order.side }}
+                            </td>
+                            <td>
+                                {{ order.qty }}
+                            </td>
+                            <td>
+                                {{ order.otype }}
+                            </td>
+                            <td>
+                                {{ order.lmtpx }}
+                            </td>
+                            <td>
+                                {{ order.pqty }}
+                            </td>
+                            <td>
+                                {{ order.potype }}
+                            </td>
+                            <td>
+                                {{ order.plmptx }}
+                            </td>
+                            <td>
+                                {{ order.tif }}
+                            </td>
+                            <td>
+                                {{ order.oc }}
+                            </td>
+                             <td>
+                                {{ order.qfilled }}
+                            </td>
+                             <td>
+                                {{ order.qopen }}
+                            </td>
+                            <td>
+                                {{ order.state }}
+                            </td>
+                            <td>
+                                {{ order.cstate }}
+                            </td>
+                            <td>
+                                {{ order.rstate }}
+                            </td>
+                            <td>
+                                <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion-670851" href="#accordion-element-{{ order.ooid }}" contenteditable="true">Detail</a>
+                            </td>
+                            </tr>
+                        {% endfor %}
+				</tbody>
+			</table>
+                       <div class="accordion" id="accordion-670851">
+                  <div class="accordion-group">
+        {% for order in OrderAck_List %}
+          <div  id="accordion-element-{{ order.ooid }}" class="accordion-body  collapse" style="height: 0px;">
+                      <div class="accordion-inner" contenteditable="true">
+                <dl class="" contenteditable="true">
+                    {% for ooid,order_dic in orders_dicts.items %}
+                        {% if order.getooidStr == ooid %}
+                            <pre class="text-info" contenteditable="true">ooid:{{ ooid }}</pre>
+                        	{% for tstamp,str in order_dic %}
+                        	    	<dt class="label badge-info">{{ tstamp }}</dt>
+                        	    	<dd>{{ str }}</dd>
+                        	{% endfor %}
+                        {% endif %}
+                     {% endfor %}
+                </dl>
+              </div>
+                    </div>
+        {% endfor %}
+                  </div>
+                      </div>
+            <div class="container-fluid">
+	<div class="row-fluid">
+		<div class="span12">
+			<div class="pagination pagination-right">
+				<ul>
+                {% if currentpage > minpage %}
+					<li>
+						<a href="{% url 'Trade_Work_index' lastpage  %}">上一页</a>
+					</li>
+                {% endif %}
+                {% for page in pages%}
+                    {% if page == currentpage %}
+					<li class="active">
+						<a href="{% url 'Trade_Work_index' page  %}">{{ page }}</a>
+					</li>
+                    {% else %}
+                    <li >
+						<a href="{% url 'Trade_Work_index' page  %}">{{ page }}</a>
+					</li>
+                    {% endif %}
+                {% endfor %}
+                    {% if currentpage < maxpage %}
+					<li>
+						<a href="{% url 'Trade_Work_index' nextpage  %}">下一页</a>
+					</li>
+                    {% endif %}
+				</ul>
+			</div>
+		</div>
+	</div>
+</div>
+		</div>
+	</div>
+</div>
+</body>
+</html>
