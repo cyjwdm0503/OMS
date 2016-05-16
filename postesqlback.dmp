@@ -1,0 +1,1676 @@
+--
+-- PostgreSQL database dump
+--
+
+SET statement_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = off;
+SET check_function_bodies = false;
+SET client_min_messages = warning;
+SET escape_string_warning = off;
+
+SET search_path = public, pg_catalog;
+
+--
+-- Name: cstate; Type: TYPE; Schema: public; Owner: postgres
+--
+
+CREATE TYPE cstate AS ENUM (
+    '',
+    'PCXL',
+    'CXL',
+    'REJ'
+);
+
+
+ALTER TYPE public.cstate OWNER TO postgres;
+
+--
+-- Name: currcy; Type: TYPE; Schema: public; Owner: postgres
+--
+
+CREATE TYPE currcy AS ENUM (
+    'CNY',
+    'HKD',
+    'USD',
+    'GBP',
+    'GBp',
+    'GBX',
+    'EUR',
+    'JPY',
+    'CAD',
+    'AUD',
+    'CHF'
+);
+
+
+ALTER TYPE public.currcy OWNER TO postgres;
+
+--
+-- Name: fstate; Type: TYPE; Schema: public; Owner: postgres
+--
+
+CREATE TYPE fstate AS ENUM (
+    '',
+    'ALLOC',
+    'CXL'
+);
+
+
+ALTER TYPE public.fstate OWNER TO postgres;
+
+--
+-- Name: ostate; Type: TYPE; Schema: public; Owner: postgres
+--
+
+CREATE TYPE ostate AS ENUM (
+    'PNEW',
+    'NEW',
+    'LIVE',
+    'SUSP',
+    'FILLED',
+    'CXL',
+    'REJ',
+    'DFD'
+);
+
+
+ALTER TYPE public.ostate OWNER TO postgres;
+
+--
+-- Name: otype; Type: TYPE; Schema: public; Owner: postgres
+--
+
+CREATE TYPE otype AS ENUM (
+    'MKT',
+    'LMT',
+    'STP',
+    'STPLMT'
+);
+
+
+ALTER TYPE public.otype OWNER TO postgres;
+
+--
+-- Name: rstate; Type: TYPE; Schema: public; Owner: postgres
+--
+
+CREATE TYPE rstate AS ENUM (
+    '',
+    'PRPL',
+    'REJ'
+);
+
+
+ALTER TYPE public.rstate OWNER TO postgres;
+
+--
+-- Name: side; Type: TYPE; Schema: public; Owner: postgres
+--
+
+CREATE TYPE side AS ENUM (
+    'B',
+    'S',
+    'SS',
+    'SSE'
+);
+
+
+ALTER TYPE public.side OWNER TO postgres;
+
+--
+-- Name: tif; Type: TYPE; Schema: public; Owner: postgres
+--
+
+CREATE TYPE tif AS ENUM (
+    'DAY',
+    'GTC',
+    'OPG',
+    'IOC',
+    'FOK',
+    'GTX',
+    'GTD',
+    'CLO'
+);
+
+
+ALTER TYPE public.tif OWNER TO postgres;
+
+--
+-- Name: tname; Type: TYPE; Schema: public; Owner: postgres
+--
+
+CREATE TYPE tname AS ENUM (
+    'NO',
+    'AO',
+    'PO',
+    'CO',
+    'RC',
+    'OUT',
+    'RO',
+    'RPL',
+    'AR',
+    'RR',
+    'CLO',
+    'NF',
+    'BF'
+);
+
+
+ALTER TYPE public.tname OWNER TO postgres;
+
+SET default_tablespace = '';
+
+SET default_with_oids = false;
+
+--
+-- Name: django_migrations; Type: TABLE; Schema: public; Owner: opes; Tablespace: 
+--
+
+CREATE TABLE django_migrations (
+    id integer NOT NULL,
+    app character varying(255) NOT NULL,
+    name character varying(255) NOT NULL,
+    applied timestamp with time zone NOT NULL
+);
+
+
+ALTER TABLE public.django_migrations OWNER TO opes;
+
+--
+-- Name: django_migrations_id_seq; Type: SEQUENCE; Schema: public; Owner: opes
+--
+
+CREATE SEQUENCE django_migrations_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MAXVALUE
+    NO MINVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.django_migrations_id_seq OWNER TO opes;
+
+--
+-- Name: django_migrations_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: opes
+--
+
+ALTER SEQUENCE django_migrations_id_seq OWNED BY django_migrations.id;
+
+
+--
+-- Name: django_migrations_id_seq; Type: SEQUENCE SET; Schema: public; Owner: opes
+--
+
+SELECT pg_catalog.setval('django_migrations_id_seq', 1, false);
+
+
+--
+-- Name: fill_create; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE fill_create (
+    seqnum integer NOT NULL,
+    hostname character varying(16) NOT NULL,
+    pid integer NOT NULL,
+    osuid character varying(16) NOT NULL,
+    app character varying(16) NOT NULL,
+    uid character varying(8) NOT NULL,
+    tstamp timestamp(6) without time zone DEFAULT now() NOT NULL,
+    ofid integer NOT NULL,
+    pfid integer DEFAULT 0 NOT NULL,
+    ooid integer NOT NULL,
+    qty integer NOT NULL,
+    px numeric(12,6) NOT NULL,
+    exch character varying(4) DEFAULT ''::character varying NOT NULL,
+    exid character varying(32) DEFAULT ''::character varying NOT NULL,
+    cbrk character varying(8) DEFAULT ''::character varying NOT NULL,
+    ebrk character varying(8) DEFAULT ''::character varying NOT NULL,
+    smsg character varying(32) DEFAULT ''::character varying NOT NULL
+);
+
+
+ALTER TABLE public.fill_create OWNER TO postgres;
+
+--
+-- Name: fill_transaction_log; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE fill_transaction_log (
+    seqnum integer NOT NULL,
+    ofid integer NOT NULL,
+    errmsg text,
+    tstamp timestamp(6) without time zone,
+    query text
+);
+
+
+ALTER TABLE public.fill_transaction_log OWNER TO postgres;
+
+--
+-- Name: fills; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE fills (
+    ofid integer NOT NULL,
+    seqnum integer NOT NULL,
+    pfid integer DEFAULT 0 NOT NULL,
+    ooid integer NOT NULL,
+    qty integer NOT NULL,
+    px numeric(12,6) NOT NULL,
+    exch character varying(4) DEFAULT ''::character varying NOT NULL,
+    exid character varying(32) DEFAULT ''::character varying NOT NULL,
+    cbrk character varying(8) DEFAULT ''::character varying NOT NULL,
+    ebrk character varying(8) DEFAULT ''::character varying NOT NULL,
+    smsg character varying(32) DEFAULT ''::character varying NOT NULL,
+    fstate fstate DEFAULT ''::fstate NOT NULL,
+    cstamp timestamp(6) without time zone NOT NULL,
+    lstamp timestamp(6) without time zone NOT NULL
+);
+
+
+ALTER TABLE public.fills OWNER TO postgres;
+
+--
+-- Name: ofids; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE ofids
+    START WITH 1
+    INCREMENT BY 1
+    NO MAXVALUE
+    NO MINVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.ofids OWNER TO postgres;
+
+--
+-- Name: ofids; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('ofids', 30, true);
+
+
+--
+-- Name: ooids; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE ooids
+    START WITH 1
+    INCREMENT BY 1
+    NO MAXVALUE
+    NO MINVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.ooids OWNER TO postgres;
+
+--
+-- Name: ooids; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('ooids', 78, true);
+
+
+--
+-- Name: order_accept_replace; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE order_accept_replace (
+    seqnum integer NOT NULL,
+    hostname character varying(16) NOT NULL,
+    pid integer NOT NULL,
+    osuid character varying(16) NOT NULL,
+    app character varying(16) NOT NULL,
+    uid character varying(8) NOT NULL,
+    tstamp timestamp(6) without time zone DEFAULT now() NOT NULL,
+    ooid integer NOT NULL
+);
+
+
+ALTER TABLE public.order_accept_replace OWNER TO postgres;
+
+--
+-- Name: order_ack; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE order_ack (
+    seqnum integer NOT NULL,
+    hostname character varying(16) NOT NULL,
+    pid integer NOT NULL,
+    osuid character varying(16) NOT NULL,
+    app character varying(16) NOT NULL,
+    uid character varying(8) NOT NULL,
+    tstamp timestamp(6) without time zone DEFAULT now() NOT NULL,
+    ooid integer NOT NULL
+);
+
+
+ALTER TABLE public.order_ack OWNER TO postgres;
+
+--
+-- Name: order_cancel; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE order_cancel (
+    seqnum integer NOT NULL,
+    hostname character varying(16) NOT NULL,
+    pid integer NOT NULL,
+    osuid character varying(16) NOT NULL,
+    app character varying(16) NOT NULL,
+    uid character varying(8) NOT NULL,
+    tstamp timestamp(6) without time zone DEFAULT now() NOT NULL,
+    ooid integer NOT NULL
+);
+
+
+ALTER TABLE public.order_cancel OWNER TO postgres;
+
+--
+-- Name: order_close; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE order_close (
+    seqnum integer NOT NULL,
+    hostname character varying(16) NOT NULL,
+    pid integer NOT NULL,
+    osuid character varying(16) NOT NULL,
+    app character varying(16) NOT NULL,
+    uid character varying(8) NOT NULL,
+    tstamp timestamp(6) without time zone DEFAULT now() NOT NULL,
+    ooid integer NOT NULL
+);
+
+
+ALTER TABLE public.order_close OWNER TO postgres;
+
+--
+-- Name: order_create; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE order_create (
+    seqnum integer NOT NULL,
+    hostname character varying(16) NOT NULL,
+    pid integer NOT NULL,
+    osuid character varying(16) NOT NULL,
+    app character varying(16) NOT NULL,
+    uid character varying(8) NOT NULL,
+    tstamp timestamp(6) without time zone DEFAULT now() NOT NULL,
+    ooid integer NOT NULL,
+    poid integer DEFAULT 0 NOT NULL,
+    acct character(4) NOT NULL,
+    client character varying(16),
+    ocap character(1) NOT NULL,
+    ores character(4) DEFAULT ''::bpchar NOT NULL,
+    ticker character varying(24) NOT NULL,
+    undly character varying(24),
+    pc character(1),
+    expiry date,
+    strike numeric(12,6),
+    side side NOT NULL,
+    qty integer NOT NULL,
+    otype otype NOT NULL,
+    lmtpx numeric(12,6),
+    tif tif NOT NULL,
+    oc character(1),
+    clioid character varying(24) DEFAULT ''::character varying NOT NULL,
+    cacct character varying(8) DEFAULT ''::character varying NOT NULL,
+    execinst character varying(8) DEFAULT ''::character varying NOT NULL,
+    rtinst character varying(8) DEFAULT ''::character varying NOT NULL,
+    clrinst character varying(8) DEFAULT ''::character varying NOT NULL,
+    srcuser character varying(8) NOT NULL,
+    srcdesk character varying(8) NOT NULL,
+    dstuser character varying(8) NOT NULL,
+    dstdesk character varying(8) NOT NULL,
+    exch character(4) DEFAULT ''::bpchar NOT NULL,
+    currcy currcy NOT NULL,
+    umsg character varying(32) DEFAULT ''::character varying NOT NULL
+);
+
+
+ALTER TABLE public.order_create OWNER TO postgres;
+
+--
+-- Name: order_out; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE order_out (
+    seqnum integer NOT NULL,
+    hostname character varying(16) NOT NULL,
+    pid integer NOT NULL,
+    osuid character varying(16) NOT NULL,
+    app character varying(16) NOT NULL,
+    uid character varying(8) NOT NULL,
+    tstamp timestamp(6) without time zone DEFAULT now() NOT NULL,
+    ooid integer NOT NULL,
+    qout integer NOT NULL
+);
+
+
+ALTER TABLE public.order_out OWNER TO postgres;
+
+--
+-- Name: order_reject; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE order_reject (
+    seqnum integer NOT NULL,
+    hostname character varying(16) NOT NULL,
+    pid integer NOT NULL,
+    osuid character varying(16) NOT NULL,
+    app character varying(16) NOT NULL,
+    uid character varying(8) NOT NULL,
+    tstamp timestamp(6) without time zone DEFAULT now() NOT NULL,
+    ooid integer NOT NULL,
+    smsg text NOT NULL
+);
+
+
+ALTER TABLE public.order_reject OWNER TO postgres;
+
+--
+-- Name: order_reject_cancel; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE order_reject_cancel (
+    seqnum integer NOT NULL,
+    hostname character varying(16) NOT NULL,
+    pid integer NOT NULL,
+    osuid character varying(16) NOT NULL,
+    app character varying(16) NOT NULL,
+    uid character varying(8) NOT NULL,
+    tstamp timestamp(6) without time zone DEFAULT now() NOT NULL,
+    ooid integer NOT NULL,
+    smsg text NOT NULL
+);
+
+
+ALTER TABLE public.order_reject_cancel OWNER TO postgres;
+
+--
+-- Name: order_reject_replace; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE order_reject_replace (
+    seqnum integer NOT NULL,
+    hostname character varying(16) NOT NULL,
+    pid integer NOT NULL,
+    osuid character varying(16) NOT NULL,
+    app character varying(16) NOT NULL,
+    uid character varying(8) NOT NULL,
+    tstamp timestamp(6) without time zone DEFAULT now() NOT NULL,
+    ooid integer NOT NULL,
+    smsg text NOT NULL
+);
+
+
+ALTER TABLE public.order_reject_replace OWNER TO postgres;
+
+--
+-- Name: order_replace; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE order_replace (
+    seqnum integer NOT NULL,
+    hostname character varying(16) NOT NULL,
+    pid integer NOT NULL,
+    osuid character varying(16) NOT NULL,
+    app character varying(16) NOT NULL,
+    uid character varying(8) NOT NULL,
+    tstamp timestamp(6) without time zone DEFAULT now() NOT NULL,
+    ooid integer NOT NULL,
+    pqty integer NOT NULL,
+    potype otype NOT NULL,
+    plmtpx numeric(12,6)
+);
+
+
+ALTER TABLE public.order_replace OWNER TO postgres;
+
+--
+-- Name: order_transaction_log; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE order_transaction_log (
+    seqnum integer NOT NULL,
+    ooid integer NOT NULL,
+    errmsg text,
+    tstamp timestamp(6) without time zone,
+    query text
+);
+
+
+ALTER TABLE public.order_transaction_log OWNER TO postgres;
+
+--
+-- Name: orders; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE orders (
+    ooid integer NOT NULL,
+    seqnum integer NOT NULL,
+    poid integer DEFAULT 0 NOT NULL,
+    acct character varying(4) NOT NULL,
+    client character varying(16),
+    ocap character varying(1) NOT NULL,
+    ores character varying(4),
+    ticker character varying(24) NOT NULL,
+    undly character varying(24),
+    pc character varying(1),
+    expiry date,
+    strike numeric(12,6),
+    side side NOT NULL,
+    qty integer NOT NULL,
+    otype otype NOT NULL,
+    lmtpx numeric(12,6),
+    pqty integer NOT NULL,
+    potype otype NOT NULL,
+    plmtpx numeric(12,6),
+    tif tif NOT NULL,
+    oc character varying(1),
+    qfilled integer DEFAULT 0 NOT NULL,
+    qopen integer DEFAULT 0 NOT NULL,
+    avgpx numeric(12,6) DEFAULT 0 NOT NULL,
+    tname tname NOT NULL,
+    state ostate NOT NULL,
+    cstate cstate DEFAULT ''::cstate NOT NULL,
+    rstate rstate DEFAULT ''::rstate NOT NULL,
+    clioid character varying(24) DEFAULT ''::character varying NOT NULL,
+    cacct character varying(8) DEFAULT ''::character varying NOT NULL,
+    execinst character varying(8) DEFAULT ''::character varying NOT NULL,
+    rtinst character varying(8) DEFAULT ''::character varying NOT NULL,
+    clrinst character varying(8) DEFAULT ''::character varying NOT NULL,
+    srcuser character varying(8) NOT NULL,
+    srcdesk character varying(8) NOT NULL,
+    dstuser character varying(8) NOT NULL,
+    dstdesk character varying(8) NOT NULL,
+    exch character varying(4),
+    currcy currcy NOT NULL,
+    umsg character varying(32) DEFAULT ''::character varying NOT NULL,
+    smsg character varying(32) DEFAULT ''::character varying NOT NULL,
+    cstamp timestamp(6) without time zone NOT NULL,
+    lstamp timestamp(6) without time zone NOT NULL
+);
+
+
+ALTER TABLE public.orders OWNER TO postgres;
+
+--
+-- Name: seqnums; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE seqnums
+    START WITH 1
+    INCREMENT BY 1
+    NO MAXVALUE
+    NO MINVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.seqnums OWNER TO postgres;
+
+--
+-- Name: seqnums; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('seqnums', 224, true);
+
+
+--
+-- Name: users; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE users (
+    uid character(9) NOT NULL,
+    pwd character(32) NOT NULL,
+    select_priv boolean DEFAULT false,
+    insert_priv boolean DEFAULT false,
+    subscr_priv boolean DEFAULT false,
+    pwd_expired boolean DEFAULT false
+);
+
+
+ALTER TABLE public.users OWNER TO postgres;
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: opes
+--
+
+ALTER TABLE ONLY django_migrations ALTER COLUMN id SET DEFAULT nextval('django_migrations_id_seq'::regclass);
+
+
+--
+-- Data for Name: django_migrations; Type: TABLE DATA; Schema: public; Owner: opes
+--
+
+COPY django_migrations (id, app, name, applied) FROM stdin;
+\.
+
+
+--
+-- Data for Name: fill_create; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY fill_create (seqnum, hostname, pid, osuid, app, uid, tstamp, ofid, pfid, ooid, qty, px, exch, exid, cbrk, ebrk, smsg) FROM stdin;
+74	localhost.locald	7502	vagrant	create-fill	opes_uid	2015-09-14 11:52:52.406435	1	0	38	1000	1.000000	hkex	123	None	None	
+77	localhost.locald	7523	vagrant	create-fill	opes_uid	2015-09-14 11:52:54.509446	2	0	39	100	1.000000	hkex	123	None	None	
+78	localhost.locald	7531	vagrant	create-fill	opes_uid	2015-09-14 11:52:55.198237	3	0	39	100	2.000000	hkex	123	None	None	
+79	localhost.locald	7538	vagrant	create-fill	opes_uid	2015-09-14 11:52:55.907507	4	0	39	100	3.000000	hkex	123	None	None	
+80	localhost.locald	7545	vagrant	create-fill	opes_uid	2015-09-14 11:52:56.612685	5	0	39	100	4.000000	hkex	123	None	None	
+81	localhost.locald	7552	vagrant	create-fill	opes_uid	2015-09-14 11:52:57.301795	6	0	39	100	5.000000	hkex	123	None	None	
+82	localhost.locald	7559	vagrant	create-fill	opes_uid	2015-09-14 11:52:58.003422	7	0	39	100	6.000000	hkex	123	None	None	
+83	localhost.locald	7566	vagrant	create-fill	opes_uid	2015-09-14 11:52:58.70078	8	0	39	100	7.000000	hkex	123	None	None	
+84	localhost.locald	7573	vagrant	create-fill	opes_uid	2015-09-14 11:52:59.39394	9	0	39	100	8.000000	hkex	123	None	None	
+85	localhost.locald	7580	vagrant	create-fill	opes_uid	2015-09-14 11:53:00.082032	10	0	39	100	9.000000	hkex	123	None	None	
+86	localhost.locald	7587	vagrant	create-fill	opes_uid	2015-09-14 11:53:00.7855	11	0	39	100	10.000000	hkex	123	None	None	
+89	localhost.locald	7608	vagrant	create-fill	opes_uid	2015-09-14 11:53:02.877547	12	0	40	100	1.000000	hkex	123	None	None	
+90	localhost.locald	7615	vagrant	create-fill	opes_uid	2015-09-14 11:53:03.58366	13	0	40	100	2.000000	hkex	123	None	None	
+95	localhost.locald	7650	vagrant	create-fill	opes_uid	2015-09-14 11:53:07.087667	14	0	41	100	1.000000	hkex	123	None	None	
+97	localhost.locald	7664	vagrant	create-fill	opes_uid	2015-09-14 11:53:08.468701	15	0	41	900	1.000000	hkex	123	None	None	
+103	localhost.locald	7706	vagrant	create-fill	opes_uid	2015-09-14 11:53:12.73668	17	0	43	100	1.000000	hkex	123	None	None	
+107	localhost.locald	7734	vagrant	create-fill	opes_uid	2015-09-14 11:53:15.533879	19	0	44	1000	1.000000	hkex	123	None	None	
+144	localhost.locald	7999	vagrant	create-fill	opes_uid	2015-09-14 11:53:42.272552	22	0	53	100	1.000000	hkex	123	None	None	
+149	localhost.locald	8034	vagrant	create-fill	opes_uid	2015-09-14 11:53:45.75492	23	0	54	100	1.000000	hkex	123	None	None	
+162	localhost.locald	8126	vagrant	create-fill	opes_uid	2015-09-14 11:53:54.971922	24	0	57	100	1.000000	hkex	123	None	None	
+164	localhost.locald	8140	vagrant	create-fill	opes_uid	2015-09-14 11:53:56.374558	25	0	57	900	1.000000	hkex	123	None	None	
+174	localhost.locald	8210	vagrant	create-fill	opes_uid	2015-09-14 11:54:03.369354	26	0	60	100	1.000000	hkex	123	None	None	
+178	localhost.locald	8238	vagrant	create-fill	opes_uid	2015-09-14 11:54:06.16098	27	0	61	1000	1.000000	hkex	123	None	None	
+208	localhost.locald	9119	vagrant	create-fill	opes_uid	2015-09-15 00:21:48.20013	28	0	73	1000	1.000000	hkex	123	None	None	
+211	localhost.locald	9146	vagrant	create-fill	opes_uid	2015-09-15 00:22:14.533424	29	0	74	1000	1.000000	hkex	123	None	None	
+215	localhost.locald	9181	vagrant	create-fill	opes_uid	2015-09-15 00:23:14.764969	30	0	75	1000	1.000000	hkex	123	None	None	
+\.
+
+
+--
+-- Data for Name: fill_transaction_log; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY fill_transaction_log (seqnum, ofid, errmsg, tstamp, query) FROM stdin;
+74	1		2015-09-14 11:52:52.406435	insert into fill_create (exid, uid, px, hostname, pid, osuid, qty, ebrk, cbrk, ooid, app, exch) VALUES ('123', 'opes_uid', 1, 'localhost.locald', 7502, 'vagrant', 1000, 'None', 'None', 38, 'create-fill', 'hkex') RETURNING ofid
+77	2		2015-09-14 11:52:54.509446	insert into fill_create (exid, uid, px, hostname, pid, osuid, qty, ebrk, cbrk, ooid, app, exch) VALUES ('123', 'opes_uid', 1, 'localhost.locald', 7523, 'vagrant', 100, 'None', 'None', 39, 'create-fill', 'hkex') RETURNING ofid
+78	3		2015-09-14 11:52:55.198237	insert into fill_create (exid, uid, px, hostname, pid, osuid, qty, ebrk, cbrk, ooid, app, exch) VALUES ('123', 'opes_uid', 2, 'localhost.locald', 7531, 'vagrant', 100, 'None', 'None', 39, 'create-fill', 'hkex') RETURNING ofid
+79	4		2015-09-14 11:52:55.907507	insert into fill_create (exid, uid, px, hostname, pid, osuid, qty, ebrk, cbrk, ooid, app, exch) VALUES ('123', 'opes_uid', 3, 'localhost.locald', 7538, 'vagrant', 100, 'None', 'None', 39, 'create-fill', 'hkex') RETURNING ofid
+80	5		2015-09-14 11:52:56.612685	insert into fill_create (exid, uid, px, hostname, pid, osuid, qty, ebrk, cbrk, ooid, app, exch) VALUES ('123', 'opes_uid', 4, 'localhost.locald', 7545, 'vagrant', 100, 'None', 'None', 39, 'create-fill', 'hkex') RETURNING ofid
+81	6		2015-09-14 11:52:57.301795	insert into fill_create (exid, uid, px, hostname, pid, osuid, qty, ebrk, cbrk, ooid, app, exch) VALUES ('123', 'opes_uid', 5, 'localhost.locald', 7552, 'vagrant', 100, 'None', 'None', 39, 'create-fill', 'hkex') RETURNING ofid
+82	7		2015-09-14 11:52:58.003422	insert into fill_create (exid, uid, px, hostname, pid, osuid, qty, ebrk, cbrk, ooid, app, exch) VALUES ('123', 'opes_uid', 6, 'localhost.locald', 7559, 'vagrant', 100, 'None', 'None', 39, 'create-fill', 'hkex') RETURNING ofid
+83	8		2015-09-14 11:52:58.70078	insert into fill_create (exid, uid, px, hostname, pid, osuid, qty, ebrk, cbrk, ooid, app, exch) VALUES ('123', 'opes_uid', 7, 'localhost.locald', 7566, 'vagrant', 100, 'None', 'None', 39, 'create-fill', 'hkex') RETURNING ofid
+84	9		2015-09-14 11:52:59.39394	insert into fill_create (exid, uid, px, hostname, pid, osuid, qty, ebrk, cbrk, ooid, app, exch) VALUES ('123', 'opes_uid', 8, 'localhost.locald', 7573, 'vagrant', 100, 'None', 'None', 39, 'create-fill', 'hkex') RETURNING ofid
+85	10		2015-09-14 11:53:00.082032	insert into fill_create (exid, uid, px, hostname, pid, osuid, qty, ebrk, cbrk, ooid, app, exch) VALUES ('123', 'opes_uid', 9, 'localhost.locald', 7580, 'vagrant', 100, 'None', 'None', 39, 'create-fill', 'hkex') RETURNING ofid
+86	11		2015-09-14 11:53:00.7855	insert into fill_create (exid, uid, px, hostname, pid, osuid, qty, ebrk, cbrk, ooid, app, exch) VALUES ('123', 'opes_uid', 10, 'localhost.locald', 7587, 'vagrant', 100, 'None', 'None', 39, 'create-fill', 'hkex') RETURNING ofid
+89	12		2015-09-14 11:53:02.877547	insert into fill_create (exid, uid, px, hostname, pid, osuid, qty, ebrk, cbrk, ooid, app, exch) VALUES ('123', 'opes_uid', 1, 'localhost.locald', 7608, 'vagrant', 100, 'None', 'None', 40, 'create-fill', 'hkex') RETURNING ofid
+90	13		2015-09-14 11:53:03.58366	insert into fill_create (exid, uid, px, hostname, pid, osuid, qty, ebrk, cbrk, ooid, app, exch) VALUES ('123', 'opes_uid', 2, 'localhost.locald', 7615, 'vagrant', 100, 'None', 'None', 40, 'create-fill', 'hkex') RETURNING ofid
+95	14		2015-09-14 11:53:07.087667	insert into fill_create (exid, uid, px, hostname, pid, osuid, qty, ebrk, cbrk, ooid, app, exch) VALUES ('123', 'opes_uid', 1, 'localhost.locald', 7650, 'vagrant', 100, 'None', 'None', 41, 'create-fill', 'hkex') RETURNING ofid
+97	15		2015-09-14 11:53:08.468701	insert into fill_create (exid, uid, px, hostname, pid, osuid, qty, ebrk, cbrk, ooid, app, exch) VALUES ('123', 'opes_uid', 1, 'localhost.locald', 7664, 'vagrant', 900, 'None', 'None', 41, 'create-fill', 'hkex') RETURNING ofid
+103	17		2015-09-14 11:53:12.73668	insert into fill_create (exid, uid, px, hostname, pid, osuid, qty, ebrk, cbrk, ooid, app, exch) VALUES ('123', 'opes_uid', 1, 'localhost.locald', 7706, 'vagrant', 100, 'None', 'None', 43, 'create-fill', 'hkex') RETURNING ofid
+107	19		2015-09-14 11:53:15.533879	insert into fill_create (exid, uid, px, hostname, pid, osuid, qty, ebrk, cbrk, ooid, app, exch) VALUES ('123', 'opes_uid', 1, 'localhost.locald', 7734, 'vagrant', 1000, 'None', 'None', 44, 'create-fill', 'hkex') RETURNING ofid
+144	22		2015-09-14 11:53:42.272552	insert into fill_create (exid, uid, px, hostname, pid, osuid, qty, ebrk, cbrk, ooid, app, exch) VALUES ('123', 'opes_uid', 1, 'localhost.locald', 7999, 'vagrant', 100, 'None', 'None', 53, 'create-fill', 'hkex') RETURNING ofid
+149	23		2015-09-14 11:53:45.75492	insert into fill_create (exid, uid, px, hostname, pid, osuid, qty, ebrk, cbrk, ooid, app, exch) VALUES ('123', 'opes_uid', 1, 'localhost.locald', 8034, 'vagrant', 100, 'None', 'None', 54, 'create-fill', 'hkex') RETURNING ofid
+162	24		2015-09-14 11:53:54.971922	insert into fill_create (exid, uid, px, hostname, pid, osuid, qty, ebrk, cbrk, ooid, app, exch) VALUES ('123', 'opes_uid', 1, 'localhost.locald', 8126, 'vagrant', 100, 'None', 'None', 57, 'create-fill', 'hkex') RETURNING ofid
+164	25		2015-09-14 11:53:56.374558	insert into fill_create (exid, uid, px, hostname, pid, osuid, qty, ebrk, cbrk, ooid, app, exch) VALUES ('123', 'opes_uid', 1, 'localhost.locald', 8140, 'vagrant', 900, 'None', 'None', 57, 'create-fill', 'hkex') RETURNING ofid
+174	26		2015-09-14 11:54:03.369354	insert into fill_create (exid, uid, px, hostname, pid, osuid, qty, ebrk, cbrk, ooid, app, exch) VALUES ('123', 'opes_uid', 1, 'localhost.locald', 8210, 'vagrant', 100, 'None', 'None', 60, 'create-fill', 'hkex') RETURNING ofid
+178	27		2015-09-14 11:54:06.16098	insert into fill_create (exid, uid, px, hostname, pid, osuid, qty, ebrk, cbrk, ooid, app, exch) VALUES ('123', 'opes_uid', 1, 'localhost.locald', 8238, 'vagrant', 1000, 'None', 'None', 61, 'create-fill', 'hkex') RETURNING ofid
+208	28		2015-09-15 00:21:48.20013	insert into fill_create (exid, uid, px, hostname, pid, osuid, qty, ebrk, cbrk, ooid, app, exch) VALUES ('123', 'opes_uid', 1, 'localhost.locald', 9119, 'vagrant', 1000, 'None', 'None', 73, 'create-fill', 'hkex') RETURNING ofid
+211	29		2015-09-15 00:22:14.533424	insert into fill_create (exid, uid, px, hostname, pid, osuid, qty, ebrk, cbrk, ooid, app, exch) VALUES ('123', 'opes_uid', 1, 'localhost.locald', 9146, 'vagrant', 1000, 'None', 'None', 74, 'create-fill', 'hkex') RETURNING ofid
+215	30		2015-09-15 00:23:14.764969	insert into fill_create (exid, uid, px, hostname, pid, osuid, qty, ebrk, cbrk, ooid, app, exch) VALUES ('123', 'opes_uid', 1, 'localhost.locald', 9181, 'vagrant', 1000, 'None', 'None', 75, 'create-fill', 'hkex') RETURNING ofid
+\.
+
+
+--
+-- Data for Name: fills; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY fills (ofid, seqnum, pfid, ooid, qty, px, exch, exid, cbrk, ebrk, smsg, fstate, cstamp, lstamp) FROM stdin;
+1	74	0	38	1000	1.000000	hkex	123	None	None			2015-09-14 11:52:52.406435	2015-09-14 11:52:52.406435
+2	77	0	39	100	1.000000	hkex	123	None	None			2015-09-14 11:52:54.509446	2015-09-14 11:52:54.509446
+3	78	0	39	100	2.000000	hkex	123	None	None			2015-09-14 11:52:55.198237	2015-09-14 11:52:55.198237
+4	79	0	39	100	3.000000	hkex	123	None	None			2015-09-14 11:52:55.907507	2015-09-14 11:52:55.907507
+5	80	0	39	100	4.000000	hkex	123	None	None			2015-09-14 11:52:56.612685	2015-09-14 11:52:56.612685
+6	81	0	39	100	5.000000	hkex	123	None	None			2015-09-14 11:52:57.301795	2015-09-14 11:52:57.301795
+7	82	0	39	100	6.000000	hkex	123	None	None			2015-09-14 11:52:58.003422	2015-09-14 11:52:58.003422
+8	83	0	39	100	7.000000	hkex	123	None	None			2015-09-14 11:52:58.70078	2015-09-14 11:52:58.70078
+9	84	0	39	100	8.000000	hkex	123	None	None			2015-09-14 11:52:59.39394	2015-09-14 11:52:59.39394
+10	85	0	39	100	9.000000	hkex	123	None	None			2015-09-14 11:53:00.082032	2015-09-14 11:53:00.082032
+11	86	0	39	100	10.000000	hkex	123	None	None			2015-09-14 11:53:00.7855	2015-09-14 11:53:00.7855
+12	89	0	40	100	1.000000	hkex	123	None	None			2015-09-14 11:53:02.877547	2015-09-14 11:53:02.877547
+13	90	0	40	100	2.000000	hkex	123	None	None			2015-09-14 11:53:03.58366	2015-09-14 11:53:03.58366
+14	95	0	41	100	1.000000	hkex	123	None	None			2015-09-14 11:53:07.087667	2015-09-14 11:53:07.087667
+15	97	0	41	900	1.000000	hkex	123	None	None			2015-09-14 11:53:08.468701	2015-09-14 11:53:08.468701
+17	103	0	43	100	1.000000	hkex	123	None	None			2015-09-14 11:53:12.73668	2015-09-14 11:53:12.73668
+19	107	0	44	1000	1.000000	hkex	123	None	None			2015-09-14 11:53:15.533879	2015-09-14 11:53:15.533879
+22	144	0	53	100	1.000000	hkex	123	None	None			2015-09-14 11:53:42.272552	2015-09-14 11:53:42.272552
+23	149	0	54	100	1.000000	hkex	123	None	None			2015-09-14 11:53:45.75492	2015-09-14 11:53:45.75492
+24	162	0	57	100	1.000000	hkex	123	None	None			2015-09-14 11:53:54.971922	2015-09-14 11:53:54.971922
+25	164	0	57	900	1.000000	hkex	123	None	None			2015-09-14 11:53:56.374558	2015-09-14 11:53:56.374558
+26	174	0	60	100	1.000000	hkex	123	None	None			2015-09-14 11:54:03.369354	2015-09-14 11:54:03.369354
+27	178	0	61	1000	1.000000	hkex	123	None	None			2015-09-14 11:54:06.16098	2015-09-14 11:54:06.16098
+28	208	0	73	1000	1.000000	hkex	123	None	None			2015-09-15 00:21:48.20013	2015-09-15 00:21:48.20013
+29	211	0	74	1000	1.000000	hkex	123	None	None			2015-09-15 00:22:14.533424	2015-09-15 00:22:14.533424
+30	215	0	75	1000	1.000000	hkex	123	None	None			2015-09-15 00:23:14.764969	2015-09-15 00:23:14.764969
+\.
+
+
+--
+-- Data for Name: order_accept_replace; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY order_accept_replace (seqnum, hostname, pid, osuid, app, uid, tstamp, ooid) FROM stdin;
+117	localhost.locald	7809	vagrant	accept-replace	opes_uid	2015-09-14 11:53:23.309678	46
+121	localhost.locald	7838	vagrant	accept-replace	opes_uid	2015-09-14 11:53:26.101879	47
+125	localhost.locald	7866	vagrant	accept-replace	opes_uid	2015-09-14 11:53:28.900763	48
+129	localhost.locald	7894	vagrant	accept-replace	opes_uid	2015-09-14 11:53:31.80189	49
+133	localhost.locald	7922	vagrant	accept-replace	opes_uid	2015-09-14 11:53:34.603632	50
+137	localhost.locald	7950	vagrant	accept-replace	opes_uid	2015-09-14 11:53:37.39773	51
+141	localhost.locald	7978	vagrant	accept-replace	opes_uid	2015-09-14 11:53:40.163688	52
+146	localhost.locald	8013	vagrant	accept-replace	opes_uid	2015-09-14 11:53:43.661766	53
+151	localhost.locald	8048	vagrant	accept-replace	opes_uid	2015-09-14 11:53:47.151855	54
+168	localhost.locald	8168	vagrant	accept-replace	opes_uid	2015-09-14 11:53:59.15653	58
+\.
+
+
+--
+-- Data for Name: order_ack; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY order_ack (seqnum, hostname, pid, osuid, app, uid, tstamp, ooid) FROM stdin;
+26	localhost.locald	7155	vagrant	ack-order	opes_uid	2015-09-14 11:52:17.035035	25
+29	localhost.locald	7176	vagrant	ack-order	opes_uid	2015-09-14 11:52:19.368969	26
+31	localhost.locald	7190	vagrant	ack-order	opes_uid	2015-09-14 11:52:20.82496	27
+34	localhost.locald	7216	vagrant	ack-order	opes_uid	2015-09-14 11:52:23.640437	28
+38	localhost.locald	7245	vagrant	ack-order	opes_uid	2015-09-14 11:52:26.435952	29
+43	localhost.locald	7280	vagrant	ack-order	opes_uid	2015-09-14 11:52:29.928664	30
+47	localhost.locald	7308	vagrant	ack-order	opes_uid	2015-09-14 11:52:32.766951	31
+51	localhost.locald	7336	vagrant	ack-order	opes_uid	2015-09-14 11:52:35.536745	32
+55	localhost.locald	7364	vagrant	ack-order	opes_uid	2015-09-14 11:52:38.330521	33
+58	localhost.locald	7385	vagrant	ack-order	opes_uid	2015-09-14 11:52:40.424291	34
+65	localhost.locald	7434	vagrant	ack-order	opes_uid	2015-09-14 11:52:45.288209	36
+68	localhost.locald	7455	vagrant	ack-order	opes_uid	2015-09-14 11:52:47.400711	37
+73	localhost.locald	7495	vagrant	ack-order	opes_uid	2015-09-14 11:52:51.710489	38
+76	localhost.locald	7516	vagrant	ack-order	opes_uid	2015-09-14 11:52:53.807531	39
+88	localhost.locald	7601	vagrant	ack-order	opes_uid	2015-09-14 11:53:02.184292	40
+94	localhost.locald	7643	vagrant	ack-order	opes_uid	2015-09-14 11:53:06.395661	41
+99	localhost.locald	7678	vagrant	ack-order	opes_uid	2015-09-14 11:53:09.921692	42
+102	localhost.locald	7699	vagrant	ack-order	opes_uid	2015-09-14 11:53:12.034457	43
+106	localhost.locald	7727	vagrant	ack-order	opes_uid	2015-09-14 11:53:14.834863	44
+110	localhost.locald	7755	vagrant	ack-order	opes_uid	2015-09-14 11:53:17.631696	45
+115	localhost.locald	7795	vagrant	ack-order	opes_uid	2015-09-14 11:53:21.903797	46
+119	localhost.locald	7823	vagrant	ack-order	opes_uid	2015-09-14 11:53:24.701525	47
+123	localhost.locald	7852	vagrant	ack-order	opes_uid	2015-09-14 11:53:27.508861	48
+127	localhost.locald	7880	vagrant	ack-order	opes_uid	2015-09-14 11:53:30.392174	49
+131	localhost.locald	7908	vagrant	ack-order	opes_uid	2015-09-14 11:53:33.198952	50
+135	localhost.locald	7936	vagrant	ack-order	opes_uid	2015-09-14 11:53:35.992685	51
+139	localhost.locald	7964	vagrant	ack-order	opes_uid	2015-09-14 11:53:38.787894	52
+143	localhost.locald	7992	vagrant	ack-order	opes_uid	2015-09-14 11:53:41.559479	53
+148	localhost.locald	8027	vagrant	ack-order	opes_uid	2015-09-14 11:53:45.058572	54
+153	localhost.locald	8062	vagrant	ack-order	opes_uid	2015-09-14 11:53:48.549347	55
+157	localhost.locald	8090	vagrant	ack-order	opes_uid	2015-09-14 11:53:51.369108	56
+161	localhost.locald	8118	vagrant	ack-order	opes_uid	2015-09-14 11:53:54.267992	57
+167	localhost.locald	8161	vagrant	ack-order	opes_uid	2015-09-14 11:53:58.45579	58
+170	localhost.locald	8182	vagrant	ack-order	opes_uid	2015-09-14 11:54:00.561701	59
+173	localhost.locald	8203	vagrant	ack-order	opes_uid	2015-09-14 11:54:02.672838	60
+177	localhost.locald	8231	vagrant	ack-order	opes_uid	2015-09-14 11:54:05.454673	61
+181	localhost.locald	8259	vagrant	ack-order	opes_uid	2015-09-14 11:54:08.257663	62
+186	localhost.locald	8294	vagrant	ack-order	opes_uid	2015-09-14 11:54:11.787243	63
+190	localhost.locald	8322	vagrant	ack-order	opes_uid	2015-09-14 11:54:14.799448	64
+194	localhost.locald	8350	vagrant	ack-order	opes_uid	2015-09-14 11:54:17.588863	65
+207	localhost.locald	9112	vagrant	ack-order	opes_uid	2015-09-15 00:21:47.48904	73
+210	localhost.locald	9139	vagrant	ack-order	opes_uid	2015-09-15 00:22:13.835821	74
+214	localhost.locald	9174	vagrant	ack-order	opes_uid	2015-09-15 00:23:14.073035	75
+218	localhost.locald	9202	vagrant	ack-order	opes_uid	2015-09-15 00:23:16.86317	76
+224	localhost.locald	12692	vagrant	Triton	opes_uid	2015-09-19 13:21:39.009348	78
+\.
+
+
+--
+-- Data for Name: order_cancel; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY order_cancel (seqnum, hostname, pid, osuid, app, uid, tstamp, ooid) FROM stdin;
+28	localhost.locald	7169	vagrant	cancel-order	opes_uid	2015-09-14 11:52:18.586977	26
+35	localhost.locald	7223	vagrant	cancel-order	opes_uid	2015-09-14 11:52:24.335487	28
+39	localhost.locald	7252	vagrant	cancel-order	opes_uid	2015-09-14 11:52:27.13451	29
+44	localhost.locald	7287	vagrant	cancel-order	opes_uid	2015-09-14 11:52:30.631426	30
+48	localhost.locald	7315	vagrant	cancel-order	opes_uid	2015-09-14 11:52:33.45954	31
+52	localhost.locald	7343	vagrant	cancel-order	opes_uid	2015-09-14 11:52:36.236709	32
+59	localhost.locald	7392	vagrant	cancel-order	opes_uid	2015-09-14 11:52:41.129554	34
+69	localhost.locald	7462	vagrant	cancel-order	opes_uid	2015-09-14 11:52:48.094935	37
+91	localhost.locald	7622	vagrant	cancel-order	opes_uid	2015-09-14 11:53:04.287446	40
+96	localhost.locald	7657	vagrant	cancel-order	opes_uid	2015-09-14 11:53:07.78076	41
+111	localhost.locald	7762	vagrant	cancel-order	opes_uid	2015-09-14 11:53:18.329275	45
+182	localhost.locald	8266	vagrant	cancel-order	opes_uid	2015-09-14 11:54:08.958278	62
+187	localhost.locald	8301	vagrant	cancel-order	opes_uid	2015-09-14 11:54:12.706703	63
+219	localhost.locald	9209	vagrant	cancel-order	opes_uid	2015-09-15 00:23:17.554604	76
+\.
+
+
+--
+-- Data for Name: order_close; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY order_close (seqnum, hostname, pid, osuid, app, uid, tstamp, ooid) FROM stdin;
+\.
+
+
+--
+-- Data for Name: order_create; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY order_create (seqnum, hostname, pid, osuid, app, uid, tstamp, ooid, poid, acct, client, ocap, ores, ticker, undly, pc, expiry, strike, side, qty, otype, lmtpx, tif, oc, clioid, cacct, execinst, rtinst, clrinst, srcuser, srcdesk, dstuser, dstdesk, exch, currcy, umsg) FROM stdin;
+2	localhost.locald	4360	vagrant	make-order	opes_uid	2015-09-11 21:45:05.19473	2	0	ERR1	\N	P	    	00011	\N	\N	\N	\N	B	1000	MKT	\N	DAY	\N	150911-214504.704117					jli	CASH	hk_argo	ALGO	HKEX	HKD	
+4	localhost.locald	4385	vagrant	make-order	opes_uid	2015-09-11 21:47:38.779517	4	0	ERR1	\N	P	    	00011	\N	\N	\N	\N	B	1000	MKT	\N	DAY	\N	150911-214738.290144					jli	CASH	hk_argo	ALGO	HKEX	HKD	
+11	localhost.locald	4484	vagrant	make-order	opes_uid	2015-09-11 21:55:17.004615	11	0	ERR1		P	    	00011	\N	\N	\N	\N	B	1000	MKT	\N	DAY	\N	150911-215516.518120					jli	CASH	hk_argo	ALGO	HKEX	HKD	
+21	localhost.locald	7112	vagrant	make-order	opes_uid	2015-09-14 11:52:12.720656	21	0	ERR1		P	    	00011	\N	\N	\N	\N	B	1000	LMT	1.200000	DAY	\N	150914-115212.225419					jli	CASH	hk_argo	ALGO	HKEX	HKD	
+25	localhost.locald	7148	vagrant	make-order	opes_uid	2015-09-14 11:52:16.347548	25	0	ERR1		P	    	00011	\N	\N	\N	\N	B	1000	LMT	1.200000	DAY	\N	150914-115215.852687					jli	CASH	hk_argo	ALGO	HKEX	HKD	
+27	localhost.locald	7162	vagrant	make-order	opes_uid	2015-09-14 11:52:17.86405	26	0	ERR1		P	    	00011	\N	\N	\N	\N	B	1000	LMT	1.200000	DAY	\N	150914-115217.251430					jli	CASH	hk_argo	ALGO	HKEX	HKD	
+30	localhost.locald	7183	vagrant	make-order	opes_uid	2015-09-14 11:52:20.128682	27	0	ERR1		P	    	00011	\N	\N	\N	\N	B	1000	LMT	1.200000	DAY	\N	150914-115219.580420					jli	CASH	hk_argo	ALGO	HKEX	HKD	
+33	localhost.locald	7209	vagrant	make-order	opes_uid	2015-09-14 11:52:22.946665	28	0	ERR1		P	    	00011	\N	\N	\N	\N	B	1000	LMT	1.200000	DAY	\N	150914-115222.460436					jli	CASH	hk_argo	ALGO	HKEX	HKD	
+37	localhost.locald	7238	vagrant	make-order	opes_uid	2015-09-14 11:52:25.731623	29	0	ERR1		P	    	00011	\N	\N	\N	\N	B	1000	LMT	1.200000	DAY	\N	150914-115225.234420					jli	CASH	hk_argo	ALGO	HKEX	HKD	
+42	localhost.locald	7273	vagrant	make-order	opes_uid	2015-09-14 11:52:29.232548	30	0	ERR1		P	    	00011	\N	\N	\N	\N	B	1000	LMT	1.200000	DAY	\N	150914-115228.733419					jli	CASH	hk_argo	ALGO	HKEX	HKD	
+46	localhost.locald	7301	vagrant	make-order	opes_uid	2015-09-14 11:52:32.067691	31	0	ERR1		P	    	00011	\N	\N	\N	\N	B	1000	LMT	1.200000	DAY	\N	150914-115231.569184					jli	CASH	hk_argo	ALGO	HKEX	HKD	
+50	localhost.locald	7329	vagrant	make-order	opes_uid	2015-09-14 11:52:34.842323	32	0	ERR1		P	    	00011	\N	\N	\N	\N	B	1000	LMT	1.200000	DAY	\N	150914-115234.356420					jli	CASH	hk_argo	ALGO	HKEX	HKD	
+54	localhost.locald	7357	vagrant	make-order	opes_uid	2015-09-14 11:52:37.629549	33	0	ERR1		P	    	00011	\N	\N	\N	\N	B	1000	LMT	1.200000	DAY	\N	150914-115237.142418					jli	CASH	hk_argo	ALGO	HKEX	HKD	
+57	localhost.locald	7378	vagrant	make-order	opes_uid	2015-09-14 11:52:39.725513	34	0	ERR1		P	    	00011	\N	\N	\N	\N	B	1000	LMT	1.200000	DAY	\N	150914-115239.233117					jli	CASH	hk_argo	ALGO	HKEX	HKD	
+62	localhost.locald	7413	vagrant	make-order	opes_uid	2015-09-14 11:52:43.224296	35	0	ERR1		P	    	00011	\N	\N	\N	\N	B	1000	LMT	1.200000	DAY	\N	150914-115242.727420					jli	CASH	hk_argo	ALGO	HKEX	HKD	
+64	localhost.locald	7427	vagrant	make-order	opes_uid	2015-09-14 11:52:44.598698	36	0	ERR1		P	    	00011	\N	\N	\N	\N	B	1000	LMT	1.200000	DAY	\N	150914-115244.113420					jli	CASH	hk_argo	ALGO	HKEX	HKD	
+67	localhost.locald	7448	vagrant	make-order	opes_uid	2015-09-14 11:52:46.711718	37	0	ERR1		P	    	00011	\N	\N	\N	\N	B	1000	LMT	1.200000	DAY	\N	150914-115246.214418					jli	CASH	hk_argo	ALGO	HKEX	HKD	
+72	localhost.locald	7488	vagrant	make-order	opes_uid	2015-09-14 11:52:51.016131	38	0	ERR1		P	    	00011	\N	\N	\N	\N	B	1000	LMT	1.200000	DAY	\N	150914-115250.484422					jli	CASH	hk_argo	ALGO	HKEX	HKD	
+75	localhost.locald	7509	vagrant	make-order	opes_uid	2015-09-14 11:52:53.111449	39	0	ERR1		P	    	00011	\N	\N	\N	\N	B	1000	LMT	1.200000	DAY	\N	150914-115252.613420					jli	CASH	hk_argo	ALGO	HKEX	HKD	
+87	localhost.locald	7594	vagrant	make-order	opes_uid	2015-09-14 11:53:01.497889	40	0	ERR1		P	    	00011	\N	\N	\N	\N	B	1000	LMT	1.200000	DAY	\N	150914-115300.995419					jli	CASH	hk_argo	ALGO	HKEX	HKD	
+93	localhost.locald	7636	vagrant	make-order	opes_uid	2015-09-14 11:53:05.681759	41	0	ERR1		P	    	00011	\N	\N	\N	\N	B	1000	LMT	1.200000	DAY	\N	150914-115305.187594					jli	CASH	hk_argo	ALGO	HKEX	HKD	
+105	localhost.locald	7720	vagrant	make-order	opes_uid	2015-09-14 11:53:14.139933	44	0	ERR1		P	    	00011	\N	\N	\N	\N	B	1000	LMT	1.200000	DAY	\N	150914-115313.638420					jli	CASH	hk_argo	ALGO	HKEX	HKD	
+118	localhost.locald	7816	vagrant	make-order	opes_uid	2015-09-14 11:53:24.00782	47	0	ERR1		P	    	00011	\N	\N	\N	\N	B	1000	LMT	1.200000	DAY	\N	150914-115323.516420					jli	CASH	hk_argo	ALGO	HKEX	HKD	
+130	localhost.locald	7901	vagrant	make-order	opes_uid	2015-09-14 11:53:32.502546	50	0	ERR1		P	    	00011	\N	\N	\N	\N	B	1000	LMT	1.200000	DAY	\N	150914-115332.006968					jli	CASH	hk_argo	ALGO	HKEX	HKD	
+142	localhost.locald	7985	vagrant	make-order	opes_uid	2015-09-14 11:53:40.862019	53	0	ERR1		P	    	00011	\N	\N	\N	\N	B	1000	LMT	1.200000	DAY	\N	150914-115340.370421					jli	CASH	hk_argo	ALGO	HKEX	HKD	
+160	localhost.locald	8111	vagrant	make-order	opes_uid	2015-09-14 11:53:53.565548	57	0	ERR1		P	    	00011	\N	\N	\N	\N	B	1000	LMT	1.200000	DAY	\N	150914-115353.075419					jli	CASH	hk_argo	ALGO	HKEX	HKD	
+169	localhost.locald	8175	vagrant	make-order	opes_uid	2015-09-14 11:53:59.875683	59	0	ERR1		P	    	00011	\N	\N	\N	\N	B	1000	LMT	1.200000	DAY	\N	150914-115359.372915					jli	CASH	hk_argo	ALGO	HKEX	HKD	
+172	localhost.locald	8196	vagrant	make-order	opes_uid	2015-09-14 11:54:01.97003	60	0	ERR1		P	    	00011	\N	\N	\N	\N	B	1000	LMT	1.200000	DAY	\N	150914-115401.468927					jli	CASH	hk_argo	ALGO	HKEX	HKD	
+193	localhost.locald	8343	vagrant	make-order	opes_uid	2015-09-14 11:54:16.890831	65	0	ERR1		P	    	00011	\N	\N	\N	\N	B	1000	LMT	1.200000	DAY	\N	150914-115416.395239					jli	CASH	hk_argo	ALGO	HKEX	HKD	
+98	localhost.locald	7671	vagrant	make-order	opes_uid	2015-09-14 11:53:09.227677	42	0	ERR1		P	    	00011	\N	\N	\N	\N	B	1000	LMT	1.200000	DAY	\N	150914-115308.732420					jli	CASH	hk_argo	ALGO	HKEX	HKD	
+101	localhost.locald	7692	vagrant	make-order	opes_uid	2015-09-14 11:53:11.336042	43	0	ERR1		P	    	00011	\N	\N	\N	\N	B	1000	LMT	1.200000	DAY	\N	150914-115310.837740					jli	CASH	hk_argo	ALGO	HKEX	HKD	
+114	localhost.locald	7788	vagrant	make-order	opes_uid	2015-09-14 11:53:21.202711	46	0	ERR1		P	    	00011	\N	\N	\N	\N	B	1000	LMT	1.200000	DAY	\N	150914-115320.659717					jli	CASH	hk_argo	ALGO	HKEX	HKD	
+126	localhost.locald	7873	vagrant	make-order	opes_uid	2015-09-14 11:53:29.604648	49	0	ERR1		P	    	00011	\N	\N	\N	\N	B	1000	LMT	1.200000	DAY	\N	150914-115329.109420					jli	CASH	hk_argo	ALGO	HKEX	HKD	
+138	localhost.locald	7957	vagrant	make-order	opes_uid	2015-09-14 11:53:38.092185	52	0	ERR1		P	    	00011	\N	\N	\N	\N	B	1000	LMT	1.200000	DAY	\N	150914-115337.599590					jli	CASH	hk_argo	ALGO	HKEX	HKD	
+147	localhost.locald	8020	vagrant	make-order	opes_uid	2015-09-14 11:53:44.36401	54	0	ERR1		P	    	00011	\N	\N	\N	\N	B	1000	LMT	1.200000	DAY	\N	150914-115343.862421					jli	CASH	hk_argo	ALGO	HKEX	HKD	
+156	localhost.locald	8083	vagrant	make-order	opes_uid	2015-09-14 11:53:50.652767	56	0	ERR1		P	    	00011	\N	\N	\N	\N	B	1000	LMT	1.200000	DAY	\N	150914-115350.152250					jli	CASH	hk_argo	ALGO	HKEX	HKD	
+165	localhost.locald	8147	vagrant	make-order	opes_uid	2015-09-14 11:53:57.074284	58	0	ERR1		P	    	00011	\N	\N	\N	\N	B	1000	LMT	1.200000	DAY	\N	150914-115356.578419					jli	CASH	hk_argo	ALGO	HKEX	HKD	
+180	localhost.locald	8252	vagrant	make-order	opes_uid	2015-09-14 11:54:07.566535	62	0	ERR1		P	    	00011	\N	\N	\N	\N	B	1000	LMT	1.200000	DAY	\N	150914-115407.075424					jli	CASH	hk_argo	ALGO	HKEX	HKD	
+189	localhost.locald	8315	vagrant	make-order	opes_uid	2015-09-14 11:54:14.102746	64	0	ERR1		P	    	00011	\N	\N	\N	\N	B	1000	LMT	1.200000	DAY	\N	150914-115413.605421					jli	CASH	hk_argo	ALGO	HKEX	HKD	
+196	localhost.locald	8581	vagrant	make-order	opes_uid	2015-09-14 12:16:13.088432	66	0	ERR1		P	    	00011	\N	\N	\N	\N	B	1000	LMT	1.200000	DAY	\N	150914-121612.591415					jli	CASH	hk_argo	ALGO	HKEX	HKD	
+197	localhost.locald	8597	vagrant	make-order	opes_uid	2015-09-14 12:17:12.146608	67	0	ERR1		P	    	00011	\N	\N	\N	\N	B	1000	LMT	1.200000	DAY	\N	150914-121711.651336					jli	CASH	hk_argo	ALGO	HKEX	HKD	
+198	localhost.locald	8612	vagrant	make-order	opes_uid	2015-09-14 12:17:55.659502	68	0	ERR1		P	    	00011	\N	\N	\N	\N	B	1000	LMT	1.200000	DAY	\N	150914-121755.161416					jli	CASH	hk_argo	ALGO	HKEX	HKD	
+199	localhost.locald	8628	vagrant	make-order	opes_uid	2015-09-14 12:18:33.059474	69	0	ERR1		P	    	00011	\N	\N	\N	\N	B	1000	LMT	1.200000	DAY	\N	150914-121832.556429					jli	CASH	hk_argo	ALGO	HKEX	HKD	
+200	localhost.locald	8643	vagrant	make-order	opes_uid	2015-09-14 12:19:06.576868	70	0	ERR1		P	    	00011	\N	\N	\N	\N	B	1000	LMT	1.200000	DAY	\N	150914-121906.052603					jli	CASH	hk_argo	ALGO	HKEX	HKD	
+109	localhost.locald	7748	vagrant	make-order	opes_uid	2015-09-14 11:53:16.942773	45	0	ERR1		P	    	00011	\N	\N	\N	\N	B	1000	LMT	1.200000	DAY	\N	150914-115316.448170					jli	CASH	hk_argo	ALGO	HKEX	HKD	
+122	localhost.locald	7845	vagrant	make-order	opes_uid	2015-09-14 11:53:26.812896	48	0	ERR1		P	    	00011	\N	\N	\N	\N	B	1000	LMT	1.200000	DAY	\N	150914-115326.308424					jli	CASH	hk_argo	ALGO	HKEX	HKD	
+134	localhost.locald	7929	vagrant	make-order	opes_uid	2015-09-14 11:53:35.297218	51	0	ERR1		P	    	00011	\N	\N	\N	\N	B	1000	MKT	\N	DAY	\N	150914-115334.812420					jli	CASH	hk_argo	ALGO	HKEX	HKD	
+152	localhost.locald	8055	vagrant	make-order	opes_uid	2015-09-14 11:53:47.857429	55	0	ERR1		P	    	00011	\N	\N	\N	\N	B	1000	LMT	1.200000	DAY	\N	150914-115347.355420					jli	CASH	hk_argo	ALGO	HKEX	HKD	
+176	localhost.locald	8224	vagrant	make-order	opes_uid	2015-09-14 11:54:04.759503	61	0	ERR1		P	    	00011	\N	\N	\N	\N	B	1000	LMT	1.200000	DAY	\N	150914-115404.272462					jli	CASH	hk_argo	ALGO	HKEX	HKD	
+185	localhost.locald	8287	vagrant	make-order	opes_uid	2015-09-14 11:54:11.08406	63	0	ERR1		P	    	00011	\N	\N	\N	\N	B	1000	LMT	1.200000	DAY	\N	150914-115410.570420					jli	CASH	hk_argo	ALGO	HKEX	HKD	
+202	localhost.locald	9060	vagrant	make-order	opes_uid	2015-09-15 00:18:56.045919	71	0	ERR1		P	    	00011	\N	\N	\N	\N	B	1000	LMT	1.200000	DAY	\N	150915-001855.545759					jli	CASH	hk_argo	ALGO	HKEX	HKD	
+204	localhost.locald	9079	vagrant	make-order	opes_uid	2015-09-15 00:18:57.439634	72	0	ERR1		P	    	00011	\N	\N	\N	\N	B	1000	LMT	1.200000	DAY	\N	150915-001856.944102					jli	CASH	hk_argo	ALGO	HKEX	HKD	
+206	localhost.locald	9105	vagrant	make-order	opes_uid	2015-09-15 00:21:46.790989	73	0	ERR1		P	    	00011	\N	\N	\N	\N	B	1000	LMT	1.200000	DAY	\N	150915-002146.293899					jli	CASH	hk_argo	ALGO	HKEX	HKD	
+209	localhost.locald	9132	vagrant	make-order	opes_uid	2015-09-15 00:22:13.126041	74	0	ERR1		P	    	00011	\N	\N	\N	\N	B	1000	LMT	1.200000	DAY	\N	150915-002212.631741					jli	CASH	hk_argo	ALGO	HKEX	HKD	
+213	localhost.locald	9167	vagrant	make-order	opes_uid	2015-09-15 00:23:13.373895	75	0	ERR1		P	    	00011	\N	\N	\N	\N	B	1000	LMT	1.200000	DAY	\N	150915-002312.882049					jli	CASH	hk_argo	ALGO	HKEX	HKD	
+217	localhost.locald	9195	vagrant	make-order	opes_uid	2015-09-15 00:23:16.178036	76	0	ERR1		P	    	00011	\N	\N	\N	\N	B	1000	LMT	1.200000	DAY	\N	150915-002315.682755					jli	CASH	hk_argo	ALGO	HKEX	HKD	
+223	localhost.locald	12737	vagrant	make-order	opes_uid	2015-09-19 13:21:08.014496	78	0	ERR1		P	    	00011	\N	\N	\N	\N	B	1000	LMT	1.200000	DAY	\N	150919-132107.695802					jli	CASH	hk_argo	ALGO	HKEX	HKD	
+\.
+
+
+--
+-- Data for Name: order_out; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY order_out (seqnum, hostname, pid, osuid, app, uid, tstamp, ooid, qout) FROM stdin;
+36	localhost.locald	7231	vagrant	ack-order	opes_uid	2015-09-14 11:52:25.024122	28	1000
+40	localhost.locald	7259	vagrant	ack-order	opes_uid	2015-09-14 11:52:27.823882	29	100
+41	localhost.locald	7266	vagrant	ack-order	opes_uid	2015-09-14 11:52:28.527594	29	900
+60	localhost.locald	7399	vagrant	ack-order	opes_uid	2015-09-14 11:52:41.823311	34	1000
+70	localhost.locald	7469	vagrant	ack-order	opes_uid	2015-09-14 11:52:48.780701	37	1000
+92	localhost.locald	7629	vagrant	ack-order	opes_uid	2015-09-14 11:53:04.9825	40	800
+112	localhost.locald	7769	vagrant	ack-order	opes_uid	2015-09-14 11:53:19.034916	45	1000
+183	localhost.locald	8273	vagrant	ack-order	opes_uid	2015-09-14 11:54:09.659976	62	1000
+220	localhost.locald	9216	vagrant	ack-order	opes_uid	2015-09-15 00:23:18.25188	76	1000
+\.
+
+
+--
+-- Data for Name: order_reject; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY order_reject (seqnum, hostname, pid, osuid, app, uid, tstamp, ooid, smsg) FROM stdin;
+201	localhost.locald	8650	vagrant	ack-order	opes_uid	2015-09-14 12:19:07.281597	70	bad-client
+203	localhost.locald	9072	vagrant	ack-order	opes_uid	2015-09-15 00:18:56.73741	71	bad-client
+205	localhost.locald	9086	vagrant	ack-order	opes_uid	2015-09-15 00:18:58.154882	72	bad-client
+\.
+
+
+--
+-- Data for Name: order_reject_cancel; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY order_reject_cancel (seqnum, hostname, pid, osuid, app, uid, tstamp, ooid, smsg) FROM stdin;
+45	localhost.locald	7294	vagrant	ack-order	opes_uid	2015-09-14 11:52:31.326663	30	a-reject-cancel-msg
+\.
+
+
+--
+-- Data for Name: order_reject_replace; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY order_reject_replace (seqnum, hostname, pid, osuid, app, uid, tstamp, ooid, smsg) FROM stdin;
+155	localhost.locald	8076	vagrant	reject-replace	opes_uid	2015-09-14 11:53:49.946701	55	too-late
+159	localhost.locald	8104	vagrant	reject-replace	opes_uid	2015-09-14 11:53:52.871262	56	bad-px
+\.
+
+
+--
+-- Data for Name: order_replace; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY order_replace (seqnum, hostname, pid, osuid, app, uid, tstamp, ooid, pqty, potype, plmtpx) FROM stdin;
+116	localhost.locald	7802	vagrant	replace-order	opes_uid	2015-09-14 11:53:22.598888	46	1100	LMT	1.200000
+120	localhost.locald	7831	vagrant	replace-order	opes_uid	2015-09-14 11:53:25.3963	47	1	LMT	1.200000
+124	localhost.locald	7859	vagrant	replace-order	opes_uid	2015-09-14 11:53:28.216862	48	1000	LMT	2.000000
+128	localhost.locald	7887	vagrant	replace-order	opes_uid	2015-09-14 11:53:31.093702	49	1000	LMT	0.010000
+132	localhost.locald	7915	vagrant	replace-order	opes_uid	2015-09-14 11:53:33.896635	50	1000	MKT	\N
+136	localhost.locald	7943	vagrant	replace-order	opes_uid	2015-09-14 11:53:36.690927	51	1000	LMT	1.200000
+140	localhost.locald	7971	vagrant	replace-order	opes_uid	2015-09-14 11:53:39.478539	52	1	LMT	0.010000
+145	localhost.locald	8006	vagrant	replace-order	opes_uid	2015-09-14 11:53:42.968988	53	101	LMT	0.010000
+150	localhost.locald	8041	vagrant	replace-order	opes_uid	2015-09-14 11:53:46.447095	54	100	LMT	0.010000
+154	localhost.locald	8069	vagrant	replace-order	opes_uid	2015-09-14 11:53:49.248536	55	1100	LMT	1.200000
+158	localhost.locald	8097	vagrant	replace-order	opes_uid	2015-09-14 11:53:52.172701	56	1000	LMT	2.000000
+163	localhost.locald	8133	vagrant	replace-order	opes_uid	2015-09-14 11:53:55.672236	57	101	LMT	1.200000
+166	localhost.locald	8154	vagrant	replace-order	opes_uid	2015-09-14 11:53:57.768421	58	1	LMT	1.200000
+191	localhost.locald	8329	vagrant	replace-order	opes_uid	2015-09-14 11:54:15.491486	64	1000	MKT	\N
+\.
+
+
+--
+-- Data for Name: order_transaction_log; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY order_transaction_log (seqnum, ooid, errmsg, tstamp, query) FROM stdin;
+2	2		2015-09-11 21:45:05.19473	insert into order_create (srcdesk, srcuser, uid, app, hostname, pid, osuid, qty, otype, ocap, currcy, clioid, acct, tif, side, ticker, dstdesk, exch, dstuser) VALUES ('CASH', 'jli', 'opes_uid', 'make-order', 'localhost.locald', 4360, 'vagrant', 1000, 'MKT', 'P', 'HKD', '150911-214504.704117', 'ERR1', 'DAY', 'B', '00011', 'ALGO', 'HKEX', 'hk_argo') RETURNING ooid
+4	4		2015-09-11 21:47:38.779517	insert into order_create (srcdesk, srcuser, uid, app, hostname, pid, osuid, qty, otype, ocap, currcy, clioid, acct, tif, side, ticker, dstdesk, exch, dstuser) VALUES ('CASH', 'jli', 'opes_uid', 'make-order', 'localhost.locald', 4385, 'vagrant', 1000, 'MKT', 'P', 'HKD', '150911-214738.290144', 'ERR1', 'DAY', 'B', '00011', 'ALGO', 'HKEX', 'hk_argo') RETURNING ooid
+11	11		2015-09-11 21:55:17.004615	insert into order_create (srcdesk, srcuser, uid, umsg, app, hostname, pid, osuid, qty, otype, client, ocap, currcy, clioid, acct, tif, side, ticker, dstdesk, exch, dstuser) VALUES ('CASH', 'jli', 'opes_uid', '', 'make-order', 'localhost.locald', 4484, 'vagrant', 1000, 'MKT', '', 'P', 'HKD', '150911-215516.518120', 'ERR1', 'DAY', 'B', '00011', 'ALGO', 'HKEX', 'hk_argo') RETURNING ooid
+21	21		2015-09-14 11:52:12.720656	insert into order_create (srcuser, uid, app, pid, qty, currcy, clioid, acct, lmtpx, hostname, ocap, tif, dstdesk, dstuser, umsg, ticker, exch, srcdesk, osuid, otype, client, side) VALUES ('jli', 'opes_uid', 'make-order', 7112, 1000, 'HKD', '150914-115212.225419', 'ERR1', 1.2, 'localhost.locald', 'P', 'DAY', 'ALGO', 'hk_argo', '', '00011', 'HKEX', 'CASH', 'vagrant', 'LMT', '', 'B') RETURNING ooid
+25	25		2015-09-14 11:52:16.347548	insert into order_create (srcuser, uid, app, pid, qty, currcy, clioid, acct, lmtpx, hostname, ocap, tif, dstdesk, dstuser, umsg, ticker, exch, srcdesk, osuid, otype, client, side) VALUES ('jli', 'opes_uid', 'make-order', 7148, 1000, 'HKD', '150914-115215.852687', 'ERR1', 1.2, 'localhost.locald', 'P', 'DAY', 'ALGO', 'hk_argo', '', '00011', 'HKEX', 'CASH', 'vagrant', 'LMT', '', 'B') RETURNING ooid
+26	25		2015-09-14 11:52:17.035035	insert into order_ack (uid, app, hostname, pid, osuid, ooid) VALUES ('opes_uid', 'ack-order', 'localhost.locald', 7155, 'vagrant', 25) RETURNING ooid
+27	26		2015-09-14 11:52:17.86405	insert into order_create (srcuser, uid, app, pid, qty, currcy, clioid, acct, lmtpx, hostname, ocap, tif, dstdesk, dstuser, umsg, ticker, exch, srcdesk, osuid, otype, client, side) VALUES ('jli', 'opes_uid', 'make-order', 7162, 1000, 'HKD', '150914-115217.251430', 'ERR1', 1.2, 'localhost.locald', 'P', 'DAY', 'ALGO', 'hk_argo', '', '00011', 'HKEX', 'CASH', 'vagrant', 'LMT', '', 'B') RETURNING ooid
+28	26		2015-09-14 11:52:18.586977	insert into order_cancel (uid, app, hostname, pid, osuid, ooid) VALUES ('opes_uid', 'cancel-order', 'localhost.locald', 7169, 'vagrant', 26) RETURNING ooid
+29	26		2015-09-14 11:52:19.368969	insert into order_ack (uid, app, hostname, pid, osuid, ooid) VALUES ('opes_uid', 'ack-order', 'localhost.locald', 7176, 'vagrant', 26) RETURNING ooid
+30	27		2015-09-14 11:52:20.128682	insert into order_create (srcuser, uid, app, pid, qty, currcy, clioid, acct, lmtpx, hostname, ocap, tif, dstdesk, dstuser, umsg, ticker, exch, srcdesk, osuid, otype, client, side) VALUES ('jli', 'opes_uid', 'make-order', 7183, 1000, 'HKD', '150914-115219.580420', 'ERR1', 1.2, 'localhost.locald', 'P', 'DAY', 'ALGO', 'hk_argo', '', '00011', 'HKEX', 'CASH', 'vagrant', 'LMT', '', 'B') RETURNING ooid
+31	27		2015-09-14 11:52:20.82496	insert into order_ack (uid, app, hostname, pid, osuid, ooid) VALUES ('opes_uid', 'ack-order', 'localhost.locald', 7190, 'vagrant', 27) RETURNING ooid
+33	28		2015-09-14 11:52:22.946665	insert into order_create (srcuser, uid, app, pid, qty, currcy, clioid, acct, lmtpx, hostname, ocap, tif, dstdesk, dstuser, umsg, ticker, exch, srcdesk, osuid, otype, client, side) VALUES ('jli', 'opes_uid', 'make-order', 7209, 1000, 'HKD', '150914-115222.460436', 'ERR1', 1.2, 'localhost.locald', 'P', 'DAY', 'ALGO', 'hk_argo', '', '00011', 'HKEX', 'CASH', 'vagrant', 'LMT', '', 'B') RETURNING ooid
+34	28		2015-09-14 11:52:23.640437	insert into order_ack (uid, app, hostname, pid, osuid, ooid) VALUES ('opes_uid', 'ack-order', 'localhost.locald', 7216, 'vagrant', 28) RETURNING ooid
+35	28		2015-09-14 11:52:24.335487	insert into order_cancel (uid, app, hostname, pid, osuid, ooid) VALUES ('opes_uid', 'cancel-order', 'localhost.locald', 7223, 'vagrant', 28) RETURNING ooid
+36	28		2015-09-14 11:52:25.024122	insert into order_out (uid, app, hostname, pid, osuid, ooid, qout) VALUES ('opes_uid', 'ack-order', 'localhost.locald', 7231, 'vagrant', 28, 1000) RETURNING ooid
+37	29		2015-09-14 11:52:25.731623	insert into order_create (srcuser, uid, app, pid, qty, currcy, clioid, acct, lmtpx, hostname, ocap, tif, dstdesk, dstuser, umsg, ticker, exch, srcdesk, osuid, otype, client, side) VALUES ('jli', 'opes_uid', 'make-order', 7238, 1000, 'HKD', '150914-115225.234420', 'ERR1', 1.2, 'localhost.locald', 'P', 'DAY', 'ALGO', 'hk_argo', '', '00011', 'HKEX', 'CASH', 'vagrant', 'LMT', '', 'B') RETURNING ooid
+38	29		2015-09-14 11:52:26.435952	insert into order_ack (uid, app, hostname, pid, osuid, ooid) VALUES ('opes_uid', 'ack-order', 'localhost.locald', 7245, 'vagrant', 29) RETURNING ooid
+39	29		2015-09-14 11:52:27.13451	insert into order_cancel (uid, app, hostname, pid, osuid, ooid) VALUES ('opes_uid', 'cancel-order', 'localhost.locald', 7252, 'vagrant', 29) RETURNING ooid
+40	29		2015-09-14 11:52:27.823882	insert into order_out (uid, app, hostname, pid, osuid, ooid, qout) VALUES ('opes_uid', 'ack-order', 'localhost.locald', 7259, 'vagrant', 29, 100) RETURNING ooid
+41	29		2015-09-14 11:52:28.527594	insert into order_out (uid, app, hostname, pid, osuid, ooid, qout) VALUES ('opes_uid', 'ack-order', 'localhost.locald', 7266, 'vagrant', 29, 900) RETURNING ooid
+42	30		2015-09-14 11:52:29.232548	insert into order_create (srcuser, uid, app, pid, qty, currcy, clioid, acct, lmtpx, hostname, ocap, tif, dstdesk, dstuser, umsg, ticker, exch, srcdesk, osuid, otype, client, side) VALUES ('jli', 'opes_uid', 'make-order', 7273, 1000, 'HKD', '150914-115228.733419', 'ERR1', 1.2, 'localhost.locald', 'P', 'DAY', 'ALGO', 'hk_argo', '', '00011', 'HKEX', 'CASH', 'vagrant', 'LMT', '', 'B') RETURNING ooid
+43	30		2015-09-14 11:52:29.928664	insert into order_ack (uid, app, hostname, pid, osuid, ooid) VALUES ('opes_uid', 'ack-order', 'localhost.locald', 7280, 'vagrant', 30) RETURNING ooid
+44	30		2015-09-14 11:52:30.631426	insert into order_cancel (uid, app, hostname, pid, osuid, ooid) VALUES ('opes_uid', 'cancel-order', 'localhost.locald', 7287, 'vagrant', 30) RETURNING ooid
+47	31		2015-09-14 11:52:32.766951	insert into order_ack (uid, app, hostname, pid, osuid, ooid) VALUES ('opes_uid', 'ack-order', 'localhost.locald', 7308, 'vagrant', 31) RETURNING ooid
+50	32		2015-09-14 11:52:34.842323	insert into order_create (srcuser, uid, app, pid, qty, currcy, clioid, acct, lmtpx, hostname, ocap, tif, dstdesk, dstuser, umsg, ticker, exch, srcdesk, osuid, otype, client, side) VALUES ('jli', 'opes_uid', 'make-order', 7329, 1000, 'HKD', '150914-115234.356420', 'ERR1', 1.2, 'localhost.locald', 'P', 'DAY', 'ALGO', 'hk_argo', '', '00011', 'HKEX', 'CASH', 'vagrant', 'LMT', '', 'B') RETURNING ooid
+59	34		2015-09-14 11:52:41.129554	insert into order_cancel (uid, app, hostname, pid, osuid, ooid) VALUES ('opes_uid', 'cancel-order', 'localhost.locald', 7392, 'vagrant', 34) RETURNING ooid
+62	35		2015-09-14 11:52:43.224296	insert into order_create (srcuser, uid, app, pid, qty, currcy, clioid, acct, lmtpx, hostname, ocap, tif, dstdesk, dstuser, umsg, ticker, exch, srcdesk, osuid, otype, client, side) VALUES ('jli', 'opes_uid', 'make-order', 7413, 1000, 'HKD', '150914-115242.727420', 'ERR1', 1.2, 'localhost.locald', 'P', 'DAY', 'ALGO', 'hk_argo', '', '00011', 'HKEX', 'CASH', 'vagrant', 'LMT', '', 'B') RETURNING ooid
+65	36		2015-09-14 11:52:45.288209	insert into order_ack (uid, app, hostname, pid, osuid, ooid) VALUES ('opes_uid', 'ack-order', 'localhost.locald', 7434, 'vagrant', 36) RETURNING ooid
+68	37		2015-09-14 11:52:47.400711	insert into order_ack (uid, app, hostname, pid, osuid, ooid) VALUES ('opes_uid', 'ack-order', 'localhost.locald', 7455, 'vagrant', 37) RETURNING ooid
+72	38		2015-09-14 11:52:51.016131	insert into order_create (srcuser, uid, app, pid, qty, currcy, clioid, acct, lmtpx, hostname, ocap, tif, dstdesk, dstuser, umsg, ticker, exch, srcdesk, osuid, otype, client, side) VALUES ('jli', 'opes_uid', 'make-order', 7488, 1000, 'HKD', '150914-115250.484422', 'ERR1', 1.2, 'localhost.locald', 'P', 'DAY', 'ALGO', 'hk_argo', '', '00011', 'HKEX', 'CASH', 'vagrant', 'LMT', '', 'B') RETURNING ooid
+75	39		2015-09-14 11:52:53.111449	insert into order_create (srcuser, uid, app, pid, qty, currcy, clioid, acct, lmtpx, hostname, ocap, tif, dstdesk, dstuser, umsg, ticker, exch, srcdesk, osuid, otype, client, side) VALUES ('jli', 'opes_uid', 'make-order', 7509, 1000, 'HKD', '150914-115252.613420', 'ERR1', 1.2, 'localhost.locald', 'P', 'DAY', 'ALGO', 'hk_argo', '', '00011', 'HKEX', 'CASH', 'vagrant', 'LMT', '', 'B') RETURNING ooid
+87	40		2015-09-14 11:53:01.497889	insert into order_create (srcuser, uid, app, pid, qty, currcy, clioid, acct, lmtpx, hostname, ocap, tif, dstdesk, dstuser, umsg, ticker, exch, srcdesk, osuid, otype, client, side) VALUES ('jli', 'opes_uid', 'make-order', 7594, 1000, 'HKD', '150914-115300.995419', 'ERR1', 1.2, 'localhost.locald', 'P', 'DAY', 'ALGO', 'hk_argo', '', '00011', 'HKEX', 'CASH', 'vagrant', 'LMT', '', 'B') RETURNING ooid
+93	41		2015-09-14 11:53:05.681759	insert into order_create (srcuser, uid, app, pid, qty, currcy, clioid, acct, lmtpx, hostname, ocap, tif, dstdesk, dstuser, umsg, ticker, exch, srcdesk, osuid, otype, client, side) VALUES ('jli', 'opes_uid', 'make-order', 7636, 1000, 'HKD', '150914-115305.187594', 'ERR1', 1.2, 'localhost.locald', 'P', 'DAY', 'ALGO', 'hk_argo', '', '00011', 'HKEX', 'CASH', 'vagrant', 'LMT', '', 'B') RETURNING ooid
+96	41		2015-09-14 11:53:07.78076	insert into order_cancel (uid, app, hostname, pid, osuid, ooid) VALUES ('opes_uid', 'cancel-order', 'localhost.locald', 7657, 'vagrant', 41) RETURNING ooid
+99	42		2015-09-14 11:53:09.921692	insert into order_ack (uid, app, hostname, pid, osuid, ooid) VALUES ('opes_uid', 'ack-order', 'localhost.locald', 7678, 'vagrant', 42) RETURNING ooid
+102	43		2015-09-14 11:53:12.034457	insert into order_ack (uid, app, hostname, pid, osuid, ooid) VALUES ('opes_uid', 'ack-order', 'localhost.locald', 7699, 'vagrant', 43) RETURNING ooid
+105	44		2015-09-14 11:53:14.139933	insert into order_create (srcuser, uid, app, pid, qty, currcy, clioid, acct, lmtpx, hostname, ocap, tif, dstdesk, dstuser, umsg, ticker, exch, srcdesk, osuid, otype, client, side) VALUES ('jli', 'opes_uid', 'make-order', 7720, 1000, 'HKD', '150914-115313.638420', 'ERR1', 1.2, 'localhost.locald', 'P', 'DAY', 'ALGO', 'hk_argo', '', '00011', 'HKEX', 'CASH', 'vagrant', 'LMT', '', 'B') RETURNING ooid
+111	45		2015-09-14 11:53:18.329275	insert into order_cancel (uid, app, hostname, pid, osuid, ooid) VALUES ('opes_uid', 'cancel-order', 'localhost.locald', 7762, 'vagrant', 45) RETURNING ooid
+115	46		2015-09-14 11:53:21.903797	insert into order_ack (uid, app, hostname, pid, osuid, ooid) VALUES ('opes_uid', 'ack-order', 'localhost.locald', 7795, 'vagrant', 46) RETURNING ooid
+118	47		2015-09-14 11:53:24.00782	insert into order_create (srcuser, uid, app, pid, qty, currcy, clioid, acct, lmtpx, hostname, ocap, tif, dstdesk, dstuser, umsg, ticker, exch, srcdesk, osuid, otype, client, side) VALUES ('jli', 'opes_uid', 'make-order', 7816, 1000, 'HKD', '150914-115323.516420', 'ERR1', 1.2, 'localhost.locald', 'P', 'DAY', 'ALGO', 'hk_argo', '', '00011', 'HKEX', 'CASH', 'vagrant', 'LMT', '', 'B') RETURNING ooid
+121	47		2015-09-14 11:53:26.101879	insert into order_accept_replace (uid, app, hostname, pid, osuid, ooid) VALUES ('opes_uid', 'accept-replace', 'localhost.locald', 7838, 'vagrant', 47) RETURNING ooid
+124	48		2015-09-14 11:53:28.216862	insert into order_replace (potype, uid, app, hostname, pid, osuid, ooid, pqty, plmtpx) VALUES ('LMT', 'opes_uid', 'replace-order', 'localhost.locald', 7859, 'vagrant', 48, 1000, 2) RETURNING ooid
+127	49		2015-09-14 11:53:30.392174	insert into order_ack (uid, app, hostname, pid, osuid, ooid) VALUES ('opes_uid', 'ack-order', 'localhost.locald', 7880, 'vagrant', 49) RETURNING ooid
+130	50		2015-09-14 11:53:32.502546	insert into order_create (srcuser, uid, app, pid, qty, currcy, clioid, acct, lmtpx, hostname, ocap, tif, dstdesk, dstuser, umsg, ticker, exch, srcdesk, osuid, otype, client, side) VALUES ('jli', 'opes_uid', 'make-order', 7901, 1000, 'HKD', '150914-115332.006968', 'ERR1', 1.2, 'localhost.locald', 'P', 'DAY', 'ALGO', 'hk_argo', '', '00011', 'HKEX', 'CASH', 'vagrant', 'LMT', '', 'B') RETURNING ooid
+133	50		2015-09-14 11:53:34.603632	insert into order_accept_replace (uid, app, hostname, pid, osuid, ooid) VALUES ('opes_uid', 'accept-replace', 'localhost.locald', 7922, 'vagrant', 50) RETURNING ooid
+45	30		2015-09-14 11:52:31.326663	insert into order_reject_cancel (uid, app, hostname, pid, osuid, smsg, ooid) VALUES ('opes_uid', 'ack-order', 'localhost.locald', 7294, 'vagrant', 'a-reject-cancel-msg', 30) RETURNING ooid
+48	31		2015-09-14 11:52:33.45954	insert into order_cancel (uid, app, hostname, pid, osuid, ooid) VALUES ('opes_uid', 'cancel-order', 'localhost.locald', 7315, 'vagrant', 31) RETURNING ooid
+51	32		2015-09-14 11:52:35.536745	insert into order_ack (uid, app, hostname, pid, osuid, ooid) VALUES ('opes_uid', 'ack-order', 'localhost.locald', 7336, 'vagrant', 32) RETURNING ooid
+54	33		2015-09-14 11:52:37.629549	insert into order_create (srcuser, uid, app, pid, qty, currcy, clioid, acct, lmtpx, hostname, ocap, tif, dstdesk, dstuser, umsg, ticker, exch, srcdesk, osuid, otype, client, side) VALUES ('jli', 'opes_uid', 'make-order', 7357, 1000, 'HKD', '150914-115237.142418', 'ERR1', 1.2, 'localhost.locald', 'P', 'DAY', 'ALGO', 'hk_argo', '', '00011', 'HKEX', 'CASH', 'vagrant', 'LMT', '', 'B') RETURNING ooid
+57	34		2015-09-14 11:52:39.725513	insert into order_create (srcuser, uid, app, pid, qty, currcy, clioid, acct, lmtpx, hostname, ocap, tif, dstdesk, dstuser, umsg, ticker, exch, srcdesk, osuid, otype, client, side) VALUES ('jli', 'opes_uid', 'make-order', 7378, 1000, 'HKD', '150914-115239.233117', 'ERR1', 1.2, 'localhost.locald', 'P', 'DAY', 'ALGO', 'hk_argo', '', '00011', 'HKEX', 'CASH', 'vagrant', 'LMT', '', 'B') RETURNING ooid
+60	34		2015-09-14 11:52:41.823311	insert into order_out (uid, app, hostname, pid, osuid, ooid, qout) VALUES ('opes_uid', 'ack-order', 'localhost.locald', 7399, 'vagrant', 34, 1000) RETURNING ooid
+69	37		2015-09-14 11:52:48.094935	insert into order_cancel (uid, app, hostname, pid, osuid, ooid) VALUES ('opes_uid', 'cancel-order', 'localhost.locald', 7462, 'vagrant', 37) RETURNING ooid
+73	38		2015-09-14 11:52:51.710489	insert into order_ack (uid, app, hostname, pid, osuid, ooid) VALUES ('opes_uid', 'ack-order', 'localhost.locald', 7495, 'vagrant', 38) RETURNING ooid
+76	39		2015-09-14 11:52:53.807531	insert into order_ack (uid, app, hostname, pid, osuid, ooid) VALUES ('opes_uid', 'ack-order', 'localhost.locald', 7516, 'vagrant', 39) RETURNING ooid
+88	40		2015-09-14 11:53:02.184292	insert into order_ack (uid, app, hostname, pid, osuid, ooid) VALUES ('opes_uid', 'ack-order', 'localhost.locald', 7601, 'vagrant', 40) RETURNING ooid
+91	40		2015-09-14 11:53:04.287446	insert into order_cancel (uid, app, hostname, pid, osuid, ooid) VALUES ('opes_uid', 'cancel-order', 'localhost.locald', 7622, 'vagrant', 40) RETURNING ooid
+94	41		2015-09-14 11:53:06.395661	insert into order_ack (uid, app, hostname, pid, osuid, ooid) VALUES ('opes_uid', 'ack-order', 'localhost.locald', 7643, 'vagrant', 41) RETURNING ooid
+106	44		2015-09-14 11:53:14.834863	insert into order_ack (uid, app, hostname, pid, osuid, ooid) VALUES ('opes_uid', 'ack-order', 'localhost.locald', 7727, 'vagrant', 44) RETURNING ooid
+109	45		2015-09-14 11:53:16.942773	insert into order_create (srcuser, uid, app, pid, qty, currcy, clioid, acct, lmtpx, hostname, ocap, tif, dstdesk, dstuser, umsg, ticker, exch, srcdesk, osuid, otype, client, side) VALUES ('jli', 'opes_uid', 'make-order', 7748, 1000, 'HKD', '150914-115316.448170', 'ERR1', 1.2, 'localhost.locald', 'P', 'DAY', 'ALGO', 'hk_argo', '', '00011', 'HKEX', 'CASH', 'vagrant', 'LMT', '', 'B') RETURNING ooid
+112	45		2015-09-14 11:53:19.034916	insert into order_out (uid, app, hostname, pid, osuid, ooid, qout) VALUES ('opes_uid', 'ack-order', 'localhost.locald', 7769, 'vagrant', 45, 1000) RETURNING ooid
+116	46		2015-09-14 11:53:22.598888	insert into order_replace (potype, uid, app, hostname, pid, osuid, ooid, pqty, plmtpx) VALUES ('LMT', 'opes_uid', 'replace-order', 'localhost.locald', 7802, 'vagrant', 46, 1100, 1.2) RETURNING ooid
+119	47		2015-09-14 11:53:24.701525	insert into order_ack (uid, app, hostname, pid, osuid, ooid) VALUES ('opes_uid', 'ack-order', 'localhost.locald', 7823, 'vagrant', 47) RETURNING ooid
+122	48		2015-09-14 11:53:26.812896	insert into order_create (srcuser, uid, app, pid, qty, currcy, clioid, acct, lmtpx, hostname, ocap, tif, dstdesk, dstuser, umsg, ticker, exch, srcdesk, osuid, otype, client, side) VALUES ('jli', 'opes_uid', 'make-order', 7845, 1000, 'HKD', '150914-115326.308424', 'ERR1', 1.2, 'localhost.locald', 'P', 'DAY', 'ALGO', 'hk_argo', '', '00011', 'HKEX', 'CASH', 'vagrant', 'LMT', '', 'B') RETURNING ooid
+125	48		2015-09-14 11:53:28.900763	insert into order_accept_replace (uid, app, hostname, pid, osuid, ooid) VALUES ('opes_uid', 'accept-replace', 'localhost.locald', 7866, 'vagrant', 48) RETURNING ooid
+128	49		2015-09-14 11:53:31.093702	insert into order_replace (potype, uid, app, hostname, pid, osuid, ooid, pqty, plmtpx) VALUES ('LMT', 'opes_uid', 'replace-order', 'localhost.locald', 7887, 'vagrant', 49, 1000, 0.01) RETURNING ooid
+131	50		2015-09-14 11:53:33.198952	insert into order_ack (uid, app, hostname, pid, osuid, ooid) VALUES ('opes_uid', 'ack-order', 'localhost.locald', 7908, 'vagrant', 50) RETURNING ooid
+134	51		2015-09-14 11:53:35.297218	insert into order_create (srcdesk, srcuser, uid, umsg, app, hostname, pid, osuid, qty, otype, client, ocap, currcy, clioid, acct, tif, side, ticker, dstdesk, exch, dstuser) VALUES ('CASH', 'jli', 'opes_uid', '', 'make-order', 'localhost.locald', 7929, 'vagrant', 1000, 'MKT', '', 'P', 'HKD', '150914-115334.812420', 'ERR1', 'DAY', 'B', '00011', 'ALGO', 'HKEX', 'hk_argo') RETURNING ooid
+137	51		2015-09-14 11:53:37.39773	insert into order_accept_replace (uid, app, hostname, pid, osuid, ooid) VALUES ('opes_uid', 'accept-replace', 'localhost.locald', 7950, 'vagrant', 51) RETURNING ooid
+140	52		2015-09-14 11:53:39.478539	insert into order_replace (potype, uid, app, hostname, pid, osuid, ooid, pqty, plmtpx) VALUES ('LMT', 'opes_uid', 'replace-order', 'localhost.locald', 7971, 'vagrant', 52, 1, 0.01) RETURNING ooid
+143	53		2015-09-14 11:53:41.559479	insert into order_ack (uid, app, hostname, pid, osuid, ooid) VALUES ('opes_uid', 'ack-order', 'localhost.locald', 7992, 'vagrant', 53) RETURNING ooid
+146	53		2015-09-14 11:53:43.661766	insert into order_accept_replace (uid, app, hostname, pid, osuid, ooid) VALUES ('opes_uid', 'accept-replace', 'localhost.locald', 8013, 'vagrant', 53) RETURNING ooid
+152	55		2015-09-14 11:53:47.857429	insert into order_create (srcuser, uid, app, pid, qty, currcy, clioid, acct, lmtpx, hostname, ocap, tif, dstdesk, dstuser, umsg, ticker, exch, srcdesk, osuid, otype, client, side) VALUES ('jli', 'opes_uid', 'make-order', 8055, 1000, 'HKD', '150914-115347.355420', 'ERR1', 1.2, 'localhost.locald', 'P', 'DAY', 'ALGO', 'hk_argo', '', '00011', 'HKEX', 'CASH', 'vagrant', 'LMT', '', 'B') RETURNING ooid
+46	31		2015-09-14 11:52:32.067691	insert into order_create (srcuser, uid, app, pid, qty, currcy, clioid, acct, lmtpx, hostname, ocap, tif, dstdesk, dstuser, umsg, ticker, exch, srcdesk, osuid, otype, client, side) VALUES ('jli', 'opes_uid', 'make-order', 7301, 1000, 'HKD', '150914-115231.569184', 'ERR1', 1.2, 'localhost.locald', 'P', 'DAY', 'ALGO', 'hk_argo', '', '00011', 'HKEX', 'CASH', 'vagrant', 'LMT', '', 'B') RETURNING ooid
+52	32		2015-09-14 11:52:36.236709	insert into order_cancel (uid, app, hostname, pid, osuid, ooid) VALUES ('opes_uid', 'cancel-order', 'localhost.locald', 7343, 'vagrant', 32) RETURNING ooid
+55	33		2015-09-14 11:52:38.330521	insert into order_ack (uid, app, hostname, pid, osuid, ooid) VALUES ('opes_uid', 'ack-order', 'localhost.locald', 7364, 'vagrant', 33) RETURNING ooid
+58	34		2015-09-14 11:52:40.424291	insert into order_ack (uid, app, hostname, pid, osuid, ooid) VALUES ('opes_uid', 'ack-order', 'localhost.locald', 7385, 'vagrant', 34) RETURNING ooid
+64	36		2015-09-14 11:52:44.598698	insert into order_create (srcuser, uid, app, pid, qty, currcy, clioid, acct, lmtpx, hostname, ocap, tif, dstdesk, dstuser, umsg, ticker, exch, srcdesk, osuid, otype, client, side) VALUES ('jli', 'opes_uid', 'make-order', 7427, 1000, 'HKD', '150914-115244.113420', 'ERR1', 1.2, 'localhost.locald', 'P', 'DAY', 'ALGO', 'hk_argo', '', '00011', 'HKEX', 'CASH', 'vagrant', 'LMT', '', 'B') RETURNING ooid
+67	37		2015-09-14 11:52:46.711718	insert into order_create (srcuser, uid, app, pid, qty, currcy, clioid, acct, lmtpx, hostname, ocap, tif, dstdesk, dstuser, umsg, ticker, exch, srcdesk, osuid, otype, client, side) VALUES ('jli', 'opes_uid', 'make-order', 7448, 1000, 'HKD', '150914-115246.214418', 'ERR1', 1.2, 'localhost.locald', 'P', 'DAY', 'ALGO', 'hk_argo', '', '00011', 'HKEX', 'CASH', 'vagrant', 'LMT', '', 'B') RETURNING ooid
+70	37		2015-09-14 11:52:48.780701	insert into order_out (uid, app, hostname, pid, osuid, ooid, qout) VALUES ('opes_uid', 'ack-order', 'localhost.locald', 7469, 'vagrant', 37, 1000) RETURNING ooid
+92	40		2015-09-14 11:53:04.9825	insert into order_out (uid, app, hostname, pid, osuid, ooid, qout) VALUES ('opes_uid', 'ack-order', 'localhost.locald', 7629, 'vagrant', 40, 800) RETURNING ooid
+161	57		2015-09-14 11:53:54.267992	insert into order_ack (uid, app, hostname, pid, osuid, ooid) VALUES ('opes_uid', 'ack-order', 'localhost.locald', 8118, 'vagrant', 57) RETURNING ooid
+98	42		2015-09-14 11:53:09.227677	insert into order_create (srcuser, uid, app, pid, qty, currcy, clioid, acct, lmtpx, hostname, ocap, tif, dstdesk, dstuser, umsg, ticker, exch, srcdesk, osuid, otype, client, side) VALUES ('jli', 'opes_uid', 'make-order', 7671, 1000, 'HKD', '150914-115308.732420', 'ERR1', 1.2, 'localhost.locald', 'P', 'DAY', 'ALGO', 'hk_argo', '', '00011', 'HKEX', 'CASH', 'vagrant', 'LMT', '', 'B') RETURNING ooid
+101	43		2015-09-14 11:53:11.336042	insert into order_create (srcuser, uid, app, pid, qty, currcy, clioid, acct, lmtpx, hostname, ocap, tif, dstdesk, dstuser, umsg, ticker, exch, srcdesk, osuid, otype, client, side) VALUES ('jli', 'opes_uid', 'make-order', 7692, 1000, 'HKD', '150914-115310.837740', 'ERR1', 1.2, 'localhost.locald', 'P', 'DAY', 'ALGO', 'hk_argo', '', '00011', 'HKEX', 'CASH', 'vagrant', 'LMT', '', 'B') RETURNING ooid
+110	45		2015-09-14 11:53:17.631696	insert into order_ack (uid, app, hostname, pid, osuid, ooid) VALUES ('opes_uid', 'ack-order', 'localhost.locald', 7755, 'vagrant', 45) RETURNING ooid
+114	46		2015-09-14 11:53:21.202711	insert into order_create (srcuser, uid, app, pid, qty, currcy, clioid, acct, lmtpx, hostname, ocap, tif, dstdesk, dstuser, umsg, ticker, exch, srcdesk, osuid, otype, client, side) VALUES ('jli', 'opes_uid', 'make-order', 7788, 1000, 'HKD', '150914-115320.659717', 'ERR1', 1.2, 'localhost.locald', 'P', 'DAY', 'ALGO', 'hk_argo', '', '00011', 'HKEX', 'CASH', 'vagrant', 'LMT', '', 'B') RETURNING ooid
+117	46		2015-09-14 11:53:23.309678	insert into order_accept_replace (uid, app, hostname, pid, osuid, ooid) VALUES ('opes_uid', 'accept-replace', 'localhost.locald', 7809, 'vagrant', 46) RETURNING ooid
+120	47		2015-09-14 11:53:25.3963	insert into order_replace (potype, uid, app, hostname, pid, osuid, ooid, pqty, plmtpx) VALUES ('LMT', 'opes_uid', 'replace-order', 'localhost.locald', 7831, 'vagrant', 47, 1, 1.2) RETURNING ooid
+123	48		2015-09-14 11:53:27.508861	insert into order_ack (uid, app, hostname, pid, osuid, ooid) VALUES ('opes_uid', 'ack-order', 'localhost.locald', 7852, 'vagrant', 48) RETURNING ooid
+126	49		2015-09-14 11:53:29.604648	insert into order_create (srcuser, uid, app, pid, qty, currcy, clioid, acct, lmtpx, hostname, ocap, tif, dstdesk, dstuser, umsg, ticker, exch, srcdesk, osuid, otype, client, side) VALUES ('jli', 'opes_uid', 'make-order', 7873, 1000, 'HKD', '150914-115329.109420', 'ERR1', 1.2, 'localhost.locald', 'P', 'DAY', 'ALGO', 'hk_argo', '', '00011', 'HKEX', 'CASH', 'vagrant', 'LMT', '', 'B') RETURNING ooid
+129	49		2015-09-14 11:53:31.80189	insert into order_accept_replace (uid, app, hostname, pid, osuid, ooid) VALUES ('opes_uid', 'accept-replace', 'localhost.locald', 7894, 'vagrant', 49) RETURNING ooid
+132	50		2015-09-14 11:53:33.896635	insert into order_replace (potype, uid, app, hostname, pid, osuid, ooid, pqty, plmtpx) VALUES ('MKT', 'opes_uid', 'replace-order', 'localhost.locald', 7915, 'vagrant', 50, 1000, NULL) RETURNING ooid
+135	51		2015-09-14 11:53:35.992685	insert into order_ack (uid, app, hostname, pid, osuid, ooid) VALUES ('opes_uid', 'ack-order', 'localhost.locald', 7936, 'vagrant', 51) RETURNING ooid
+138	52		2015-09-14 11:53:38.092185	insert into order_create (srcuser, uid, app, pid, qty, currcy, clioid, acct, lmtpx, hostname, ocap, tif, dstdesk, dstuser, umsg, ticker, exch, srcdesk, osuid, otype, client, side) VALUES ('jli', 'opes_uid', 'make-order', 7957, 1000, 'HKD', '150914-115337.599590', 'ERR1', 1.2, 'localhost.locald', 'P', 'DAY', 'ALGO', 'hk_argo', '', '00011', 'HKEX', 'CASH', 'vagrant', 'LMT', '', 'B') RETURNING ooid
+141	52		2015-09-14 11:53:40.163688	insert into order_accept_replace (uid, app, hostname, pid, osuid, ooid) VALUES ('opes_uid', 'accept-replace', 'localhost.locald', 7978, 'vagrant', 52) RETURNING ooid
+147	54		2015-09-14 11:53:44.36401	insert into order_create (srcuser, uid, app, pid, qty, currcy, clioid, acct, lmtpx, hostname, ocap, tif, dstdesk, dstuser, umsg, ticker, exch, srcdesk, osuid, otype, client, side) VALUES ('jli', 'opes_uid', 'make-order', 8020, 1000, 'HKD', '150914-115343.862421', 'ERR1', 1.2, 'localhost.locald', 'P', 'DAY', 'ALGO', 'hk_argo', '', '00011', 'HKEX', 'CASH', 'vagrant', 'LMT', '', 'B') RETURNING ooid
+150	54		2015-09-14 11:53:46.447095	insert into order_replace (potype, uid, app, hostname, pid, osuid, ooid, pqty, plmtpx) VALUES ('LMT', 'opes_uid', 'replace-order', 'localhost.locald', 8041, 'vagrant', 54, 100, 0.01) RETURNING ooid
+153	55		2015-09-14 11:53:48.549347	insert into order_ack (uid, app, hostname, pid, osuid, ooid) VALUES ('opes_uid', 'ack-order', 'localhost.locald', 8062, 'vagrant', 55) RETURNING ooid
+136	51		2015-09-14 11:53:36.690927	insert into order_replace (potype, uid, app, hostname, pid, osuid, ooid, pqty, plmtpx) VALUES ('LMT', 'opes_uid', 'replace-order', 'localhost.locald', 7943, 'vagrant', 51, 1000, 1.2) RETURNING ooid
+139	52		2015-09-14 11:53:38.787894	insert into order_ack (uid, app, hostname, pid, osuid, ooid) VALUES ('opes_uid', 'ack-order', 'localhost.locald', 7964, 'vagrant', 52) RETURNING ooid
+142	53		2015-09-14 11:53:40.862019	insert into order_create (srcuser, uid, app, pid, qty, currcy, clioid, acct, lmtpx, hostname, ocap, tif, dstdesk, dstuser, umsg, ticker, exch, srcdesk, osuid, otype, client, side) VALUES ('jli', 'opes_uid', 'make-order', 7985, 1000, 'HKD', '150914-115340.370421', 'ERR1', 1.2, 'localhost.locald', 'P', 'DAY', 'ALGO', 'hk_argo', '', '00011', 'HKEX', 'CASH', 'vagrant', 'LMT', '', 'B') RETURNING ooid
+145	53		2015-09-14 11:53:42.968988	insert into order_replace (potype, uid, app, hostname, pid, osuid, ooid, pqty, plmtpx) VALUES ('LMT', 'opes_uid', 'replace-order', 'localhost.locald', 8006, 'vagrant', 53, 101, 0.01) RETURNING ooid
+148	54		2015-09-14 11:53:45.058572	insert into order_ack (uid, app, hostname, pid, osuid, ooid) VALUES ('opes_uid', 'ack-order', 'localhost.locald', 8027, 'vagrant', 54) RETURNING ooid
+151	54		2015-09-14 11:53:47.151855	insert into order_accept_replace (uid, app, hostname, pid, osuid, ooid) VALUES ('opes_uid', 'accept-replace', 'localhost.locald', 8048, 'vagrant', 54) RETURNING ooid
+154	55		2015-09-14 11:53:49.248536	insert into order_replace (potype, uid, app, hostname, pid, osuid, ooid, pqty, plmtpx) VALUES ('LMT', 'opes_uid', 'replace-order', 'localhost.locald', 8069, 'vagrant', 55, 1100, 1.2) RETURNING ooid
+157	56		2015-09-14 11:53:51.369108	insert into order_ack (uid, app, hostname, pid, osuid, ooid) VALUES ('opes_uid', 'ack-order', 'localhost.locald', 8090, 'vagrant', 56) RETURNING ooid
+160	57		2015-09-14 11:53:53.565548	insert into order_create (srcuser, uid, app, pid, qty, currcy, clioid, acct, lmtpx, hostname, ocap, tif, dstdesk, dstuser, umsg, ticker, exch, srcdesk, osuid, otype, client, side) VALUES ('jli', 'opes_uid', 'make-order', 8111, 1000, 'HKD', '150914-115353.075419', 'ERR1', 1.2, 'localhost.locald', 'P', 'DAY', 'ALGO', 'hk_argo', '', '00011', 'HKEX', 'CASH', 'vagrant', 'LMT', '', 'B') RETURNING ooid
+155	55		2015-09-14 11:53:49.946701	insert into order_reject_replace (uid, app, hostname, pid, osuid, smsg, ooid) VALUES ('opes_uid', 'reject-replace', 'localhost.locald', 8076, 'vagrant', 'too-late', 55) RETURNING ooid
+158	56		2015-09-14 11:53:52.172701	insert into order_replace (potype, uid, app, hostname, pid, osuid, ooid, pqty, plmtpx) VALUES ('LMT', 'opes_uid', 'replace-order', 'localhost.locald', 8097, 'vagrant', 56, 1000, 2) RETURNING ooid
+156	56		2015-09-14 11:53:50.652767	insert into order_create (srcuser, uid, app, pid, qty, currcy, clioid, acct, lmtpx, hostname, ocap, tif, dstdesk, dstuser, umsg, ticker, exch, srcdesk, osuid, otype, client, side) VALUES ('jli', 'opes_uid', 'make-order', 8083, 1000, 'HKD', '150914-115350.152250', 'ERR1', 1.2, 'localhost.locald', 'P', 'DAY', 'ALGO', 'hk_argo', '', '00011', 'HKEX', 'CASH', 'vagrant', 'LMT', '', 'B') RETURNING ooid
+159	56		2015-09-14 11:53:52.871262	insert into order_reject_replace (uid, app, hostname, pid, osuid, smsg, ooid) VALUES ('opes_uid', 'reject-replace', 'localhost.locald', 8104, 'vagrant', 'bad-px', 56) RETURNING ooid
+163	57		2015-09-14 11:53:55.672236	insert into order_replace (potype, uid, app, hostname, pid, osuid, ooid, pqty, plmtpx) VALUES ('LMT', 'opes_uid', 'replace-order', 'localhost.locald', 8133, 'vagrant', 57, 101, 1.2) RETURNING ooid
+165	58		2015-09-14 11:53:57.074284	insert into order_create (srcuser, uid, app, pid, qty, currcy, clioid, acct, lmtpx, hostname, ocap, tif, dstdesk, dstuser, umsg, ticker, exch, srcdesk, osuid, otype, client, side) VALUES ('jli', 'opes_uid', 'make-order', 8147, 1000, 'HKD', '150914-115356.578419', 'ERR1', 1.2, 'localhost.locald', 'P', 'DAY', 'ALGO', 'hk_argo', '', '00011', 'HKEX', 'CASH', 'vagrant', 'LMT', '', 'B') RETURNING ooid
+166	58		2015-09-14 11:53:57.768421	insert into order_replace (potype, uid, app, hostname, pid, osuid, ooid, pqty, plmtpx) VALUES ('LMT', 'opes_uid', 'replace-order', 'localhost.locald', 8154, 'vagrant', 58, 1, 1.2) RETURNING ooid
+167	58		2015-09-14 11:53:58.45579	insert into order_ack (uid, app, hostname, pid, osuid, ooid) VALUES ('opes_uid', 'ack-order', 'localhost.locald', 8161, 'vagrant', 58) RETURNING ooid
+168	58		2015-09-14 11:53:59.15653	insert into order_accept_replace (uid, app, hostname, pid, osuid, ooid) VALUES ('opes_uid', 'accept-replace', 'localhost.locald', 8168, 'vagrant', 58) RETURNING ooid
+169	59		2015-09-14 11:53:59.875683	insert into order_create (srcuser, uid, app, pid, qty, currcy, clioid, acct, lmtpx, hostname, ocap, tif, dstdesk, dstuser, umsg, ticker, exch, srcdesk, osuid, otype, client, side) VALUES ('jli', 'opes_uid', 'make-order', 8175, 1000, 'HKD', '150914-115359.372915', 'ERR1', 1.2, 'localhost.locald', 'P', 'DAY', 'ALGO', 'hk_argo', '', '00011', 'HKEX', 'CASH', 'vagrant', 'LMT', '', 'B') RETURNING ooid
+170	59		2015-09-14 11:54:00.561701	insert into order_ack (uid, app, hostname, pid, osuid, ooid) VALUES ('opes_uid', 'ack-order', 'localhost.locald', 8182, 'vagrant', 59) RETURNING ooid
+172	60		2015-09-14 11:54:01.97003	insert into order_create (srcuser, uid, app, pid, qty, currcy, clioid, acct, lmtpx, hostname, ocap, tif, dstdesk, dstuser, umsg, ticker, exch, srcdesk, osuid, otype, client, side) VALUES ('jli', 'opes_uid', 'make-order', 8196, 1000, 'HKD', '150914-115401.468927', 'ERR1', 1.2, 'localhost.locald', 'P', 'DAY', 'ALGO', 'hk_argo', '', '00011', 'HKEX', 'CASH', 'vagrant', 'LMT', '', 'B') RETURNING ooid
+173	60		2015-09-14 11:54:02.672838	insert into order_ack (uid, app, hostname, pid, osuid, ooid) VALUES ('opes_uid', 'ack-order', 'localhost.locald', 8203, 'vagrant', 60) RETURNING ooid
+176	61		2015-09-14 11:54:04.759503	insert into order_create (srcuser, uid, app, pid, qty, currcy, clioid, acct, lmtpx, hostname, ocap, tif, dstdesk, dstuser, umsg, ticker, exch, srcdesk, osuid, otype, client, side) VALUES ('jli', 'opes_uid', 'make-order', 8224, 1000, 'HKD', '150914-115404.272462', 'ERR1', 1.2, 'localhost.locald', 'P', 'DAY', 'ALGO', 'hk_argo', '', '00011', 'HKEX', 'CASH', 'vagrant', 'LMT', '', 'B') RETURNING ooid
+177	61		2015-09-14 11:54:05.454673	insert into order_ack (uid, app, hostname, pid, osuid, ooid) VALUES ('opes_uid', 'ack-order', 'localhost.locald', 8231, 'vagrant', 61) RETURNING ooid
+180	62		2015-09-14 11:54:07.566535	insert into order_create (srcuser, uid, app, pid, qty, currcy, clioid, acct, lmtpx, hostname, ocap, tif, dstdesk, dstuser, umsg, ticker, exch, srcdesk, osuid, otype, client, side) VALUES ('jli', 'opes_uid', 'make-order', 8252, 1000, 'HKD', '150914-115407.075424', 'ERR1', 1.2, 'localhost.locald', 'P', 'DAY', 'ALGO', 'hk_argo', '', '00011', 'HKEX', 'CASH', 'vagrant', 'LMT', '', 'B') RETURNING ooid
+181	62		2015-09-14 11:54:08.257663	insert into order_ack (uid, app, hostname, pid, osuid, ooid) VALUES ('opes_uid', 'ack-order', 'localhost.locald', 8259, 'vagrant', 62) RETURNING ooid
+182	62		2015-09-14 11:54:08.958278	insert into order_cancel (uid, app, hostname, pid, osuid, ooid) VALUES ('opes_uid', 'cancel-order', 'localhost.locald', 8266, 'vagrant', 62) RETURNING ooid
+183	62		2015-09-14 11:54:09.659976	insert into order_out (uid, app, hostname, pid, osuid, ooid, qout) VALUES ('opes_uid', 'ack-order', 'localhost.locald', 8273, 'vagrant', 62, 1000) RETURNING ooid
+185	63		2015-09-14 11:54:11.08406	insert into order_create (srcuser, uid, app, pid, qty, currcy, clioid, acct, lmtpx, hostname, ocap, tif, dstdesk, dstuser, umsg, ticker, exch, srcdesk, osuid, otype, client, side) VALUES ('jli', 'opes_uid', 'make-order', 8287, 1000, 'HKD', '150914-115410.570420', 'ERR1', 1.2, 'localhost.locald', 'P', 'DAY', 'ALGO', 'hk_argo', '', '00011', 'HKEX', 'CASH', 'vagrant', 'LMT', '', 'B') RETURNING ooid
+186	63		2015-09-14 11:54:11.787243	insert into order_ack (uid, app, hostname, pid, osuid, ooid) VALUES ('opes_uid', 'ack-order', 'localhost.locald', 8294, 'vagrant', 63) RETURNING ooid
+187	63		2015-09-14 11:54:12.706703	insert into order_cancel (uid, app, hostname, pid, osuid, ooid) VALUES ('opes_uid', 'cancel-order', 'localhost.locald', 8301, 'vagrant', 63) RETURNING ooid
+189	64		2015-09-14 11:54:14.102746	insert into order_create (srcuser, uid, app, pid, qty, currcy, clioid, acct, lmtpx, hostname, ocap, tif, dstdesk, dstuser, umsg, ticker, exch, srcdesk, osuid, otype, client, side) VALUES ('jli', 'opes_uid', 'make-order', 8315, 1000, 'HKD', '150914-115413.605421', 'ERR1', 1.2, 'localhost.locald', 'P', 'DAY', 'ALGO', 'hk_argo', '', '00011', 'HKEX', 'CASH', 'vagrant', 'LMT', '', 'B') RETURNING ooid
+190	64		2015-09-14 11:54:14.799448	insert into order_ack (uid, app, hostname, pid, osuid, ooid) VALUES ('opes_uid', 'ack-order', 'localhost.locald', 8322, 'vagrant', 64) RETURNING ooid
+193	65		2015-09-14 11:54:16.890831	insert into order_create (srcuser, uid, app, pid, qty, currcy, clioid, acct, lmtpx, hostname, ocap, tif, dstdesk, dstuser, umsg, ticker, exch, srcdesk, osuid, otype, client, side) VALUES ('jli', 'opes_uid', 'make-order', 8343, 1000, 'HKD', '150914-115416.395239', 'ERR1', 1.2, 'localhost.locald', 'P', 'DAY', 'ALGO', 'hk_argo', '', '00011', 'HKEX', 'CASH', 'vagrant', 'LMT', '', 'B') RETURNING ooid
+201	70		2015-09-14 12:19:07.281597	insert into order_reject (uid, app, hostname, pid, osuid, smsg, ooid) VALUES ('opes_uid', 'ack-order', 'localhost.locald', 8650, 'vagrant', 'bad-client', 70) RETURNING ooid
+191	64		2015-09-14 11:54:15.491486	insert into order_replace (potype, uid, app, hostname, pid, osuid, ooid, pqty, plmtpx) VALUES ('MKT', 'opes_uid', 'replace-order', 'localhost.locald', 8329, 'vagrant', 64, 1000, NULL) RETURNING ooid
+194	65		2015-09-14 11:54:17.588863	insert into order_ack (uid, app, hostname, pid, osuid, ooid) VALUES ('opes_uid', 'ack-order', 'localhost.locald', 8350, 'vagrant', 65) RETURNING ooid
+196	66		2015-09-14 12:16:13.088432	insert into order_create (srcuser, uid, app, pid, qty, currcy, clioid, acct, lmtpx, hostname, ocap, tif, dstdesk, dstuser, umsg, ticker, exch, srcdesk, osuid, otype, client, side) VALUES ('jli', 'opes_uid', 'make-order', 8581, 1000, 'HKD', '150914-121612.591415', 'ERR1', 1.2, 'localhost.locald', 'P', 'DAY', 'ALGO', 'hk_argo', '', '00011', 'HKEX', 'CASH', 'vagrant', 'LMT', '', 'B') RETURNING ooid
+197	67		2015-09-14 12:17:12.146608	insert into order_create (srcuser, uid, app, pid, qty, currcy, clioid, acct, lmtpx, hostname, ocap, tif, dstdesk, dstuser, umsg, ticker, exch, srcdesk, osuid, otype, client, side) VALUES ('jli', 'opes_uid', 'make-order', 8597, 1000, 'HKD', '150914-121711.651336', 'ERR1', 1.2, 'localhost.locald', 'P', 'DAY', 'ALGO', 'hk_argo', '', '00011', 'HKEX', 'CASH', 'vagrant', 'LMT', '', 'B') RETURNING ooid
+198	68		2015-09-14 12:17:55.659502	insert into order_create (srcuser, uid, app, pid, qty, currcy, clioid, acct, lmtpx, hostname, ocap, tif, dstdesk, dstuser, umsg, ticker, exch, srcdesk, osuid, otype, client, side) VALUES ('jli', 'opes_uid', 'make-order', 8612, 1000, 'HKD', '150914-121755.161416', 'ERR1', 1.2, 'localhost.locald', 'P', 'DAY', 'ALGO', 'hk_argo', '', '00011', 'HKEX', 'CASH', 'vagrant', 'LMT', '', 'B') RETURNING ooid
+199	69		2015-09-14 12:18:33.059474	insert into order_create (srcuser, uid, app, pid, qty, currcy, clioid, acct, lmtpx, hostname, ocap, tif, dstdesk, dstuser, umsg, ticker, exch, srcdesk, osuid, otype, client, side) VALUES ('jli', 'opes_uid', 'make-order', 8628, 1000, 'HKD', '150914-121832.556429', 'ERR1', 1.2, 'localhost.locald', 'P', 'DAY', 'ALGO', 'hk_argo', '', '00011', 'HKEX', 'CASH', 'vagrant', 'LMT', '', 'B') RETURNING ooid
+200	70		2015-09-14 12:19:06.576868	insert into order_create (srcuser, uid, app, pid, qty, currcy, clioid, acct, lmtpx, hostname, ocap, tif, dstdesk, dstuser, umsg, ticker, exch, srcdesk, osuid, otype, client, side) VALUES ('jli', 'opes_uid', 'make-order', 8643, 1000, 'HKD', '150914-121906.052603', 'ERR1', 1.2, 'localhost.locald', 'P', 'DAY', 'ALGO', 'hk_argo', '', '00011', 'HKEX', 'CASH', 'vagrant', 'LMT', '', 'B') RETURNING ooid
+202	71		2015-09-15 00:18:56.045919	insert into order_create (srcuser, uid, app, pid, qty, currcy, clioid, acct, lmtpx, hostname, ocap, tif, dstdesk, dstuser, umsg, ticker, exch, srcdesk, osuid, otype, client, side) VALUES ('jli', 'opes_uid', 'make-order', 9060, 1000, 'HKD', '150915-001855.545759', 'ERR1', 1.2, 'localhost.locald', 'P', 'DAY', 'ALGO', 'hk_argo', '', '00011', 'HKEX', 'CASH', 'vagrant', 'LMT', '', 'B') RETURNING ooid
+203	71		2015-09-15 00:18:56.73741	insert into order_reject (uid, app, hostname, pid, osuid, smsg, ooid) VALUES ('opes_uid', 'ack-order', 'localhost.locald', 9072, 'vagrant', 'bad-client', 71) RETURNING ooid
+204	72		2015-09-15 00:18:57.439634	insert into order_create (srcuser, uid, app, pid, qty, currcy, clioid, acct, lmtpx, hostname, ocap, tif, dstdesk, dstuser, umsg, ticker, exch, srcdesk, osuid, otype, client, side) VALUES ('jli', 'opes_uid', 'make-order', 9079, 1000, 'HKD', '150915-001856.944102', 'ERR1', 1.2, 'localhost.locald', 'P', 'DAY', 'ALGO', 'hk_argo', '', '00011', 'HKEX', 'CASH', 'vagrant', 'LMT', '', 'B') RETURNING ooid
+205	72		2015-09-15 00:18:58.154882	insert into order_reject (uid, app, hostname, pid, osuid, smsg, ooid) VALUES ('opes_uid', 'ack-order', 'localhost.locald', 9086, 'vagrant', 'bad-client', 72) RETURNING ooid
+206	73		2015-09-15 00:21:46.790989	insert into order_create (srcuser, uid, app, pid, qty, currcy, clioid, acct, lmtpx, hostname, ocap, tif, dstdesk, dstuser, umsg, ticker, exch, srcdesk, osuid, otype, client, side) VALUES ('jli', 'opes_uid', 'make-order', 9105, 1000, 'HKD', '150915-002146.293899', 'ERR1', 1.2, 'localhost.locald', 'P', 'DAY', 'ALGO', 'hk_argo', '', '00011', 'HKEX', 'CASH', 'vagrant', 'LMT', '', 'B') RETURNING ooid
+207	73		2015-09-15 00:21:47.48904	insert into order_ack (uid, app, hostname, pid, osuid, ooid) VALUES ('opes_uid', 'ack-order', 'localhost.locald', 9112, 'vagrant', 73) RETURNING ooid
+209	74		2015-09-15 00:22:13.126041	insert into order_create (srcuser, uid, app, pid, qty, currcy, clioid, acct, lmtpx, hostname, ocap, tif, dstdesk, dstuser, umsg, ticker, exch, srcdesk, osuid, otype, client, side) VALUES ('jli', 'opes_uid', 'make-order', 9132, 1000, 'HKD', '150915-002212.631741', 'ERR1', 1.2, 'localhost.locald', 'P', 'DAY', 'ALGO', 'hk_argo', '', '00011', 'HKEX', 'CASH', 'vagrant', 'LMT', '', 'B') RETURNING ooid
+210	74		2015-09-15 00:22:13.835821	insert into order_ack (uid, app, hostname, pid, osuid, ooid) VALUES ('opes_uid', 'ack-order', 'localhost.locald', 9139, 'vagrant', 74) RETURNING ooid
+213	75		2015-09-15 00:23:13.373895	insert into order_create (srcuser, uid, app, pid, qty, currcy, clioid, acct, lmtpx, hostname, ocap, tif, dstdesk, dstuser, umsg, ticker, exch, srcdesk, osuid, otype, client, side) VALUES ('jli', 'opes_uid', 'make-order', 9167, 1000, 'HKD', '150915-002312.882049', 'ERR1', 1.2, 'localhost.locald', 'P', 'DAY', 'ALGO', 'hk_argo', '', '00011', 'HKEX', 'CASH', 'vagrant', 'LMT', '', 'B') RETURNING ooid
+214	75		2015-09-15 00:23:14.073035	insert into order_ack (uid, app, hostname, pid, osuid, ooid) VALUES ('opes_uid', 'ack-order', 'localhost.locald', 9174, 'vagrant', 75) RETURNING ooid
+217	76		2015-09-15 00:23:16.178036	insert into order_create (srcuser, uid, app, pid, qty, currcy, clioid, acct, lmtpx, hostname, ocap, tif, dstdesk, dstuser, umsg, ticker, exch, srcdesk, osuid, otype, client, side) VALUES ('jli', 'opes_uid', 'make-order', 9195, 1000, 'HKD', '150915-002315.682755', 'ERR1', 1.2, 'localhost.locald', 'P', 'DAY', 'ALGO', 'hk_argo', '', '00011', 'HKEX', 'CASH', 'vagrant', 'LMT', '', 'B') RETURNING ooid
+218	76		2015-09-15 00:23:16.86317	insert into order_ack (uid, app, hostname, pid, osuid, ooid) VALUES ('opes_uid', 'ack-order', 'localhost.locald', 9202, 'vagrant', 76) RETURNING ooid
+219	76		2015-09-15 00:23:17.554604	insert into order_cancel (uid, app, hostname, pid, osuid, ooid) VALUES ('opes_uid', 'cancel-order', 'localhost.locald', 9209, 'vagrant', 76) RETURNING ooid
+220	76		2015-09-15 00:23:18.25188	insert into order_out (uid, app, hostname, pid, osuid, ooid, qout) VALUES ('opes_uid', 'ack-order', 'localhost.locald', 9216, 'vagrant', 76, 1000) RETURNING ooid
+223	78		2015-09-19 13:21:08.014496	insert into order_create (srcuser, uid, app, pid, qty, currcy, clioid, acct, lmtpx, hostname, ocap, tif, dstdesk, dstuser, umsg, ticker, exch, srcdesk, osuid, otype, client, side) VALUES ('jli', 'opes_uid', 'make-order', 12737, 1000, 'HKD', '150919-132107.695802', 'ERR1', 1.2, 'localhost.locald', 'P', 'DAY', 'ALGO', 'hk_argo', '', '00011', 'HKEX', 'CASH', 'vagrant', 'LMT', '', 'B') RETURNING ooid
+224	78		2015-09-19 13:21:39.009348	insert into order_ack (uid, app, hostname, pid, ooid, osuid) VALUES ('opes_uid', 'Triton', 'localhost.locald', 12692, 78, 'vagrant') RETURNING ooid
+\.
+
+
+--
+-- Data for Name: orders; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY orders (ooid, seqnum, poid, acct, client, ocap, ores, ticker, undly, pc, expiry, strike, side, qty, otype, lmtpx, pqty, potype, plmtpx, tif, oc, qfilled, qopen, avgpx, tname, state, cstate, rstate, clioid, cacct, execinst, rtinst, clrinst, srcuser, srcdesk, dstuser, dstdesk, exch, currcy, umsg, smsg, cstamp, lstamp) FROM stdin;
+2	2	0	ERR1	\N	P		00011	\N	\N	\N	\N	B	1000	MKT	\N	1000	MKT	\N	DAY	\N	0	0	0.000000	NO	NEW			150911-214504.704117					jli	CASH	hk_argo	ALGO	HKEX	HKD			2015-09-11 21:45:05.19473	2015-09-11 21:45:05.19473
+4	4	0	ERR1	\N	P		00011	\N	\N	\N	\N	B	1000	MKT	\N	1000	MKT	\N	DAY	\N	0	0	0.000000	NO	NEW			150911-214738.290144					jli	CASH	hk_argo	ALGO	HKEX	HKD			2015-09-11 21:47:38.779517	2015-09-11 21:47:38.779517
+11	11	0	ERR1		P		00011	\N	\N	\N	\N	B	1000	MKT	\N	1000	MKT	\N	DAY	\N	0	0	0.000000	NO	NEW			150911-215516.518120					jli	CASH	hk_argo	ALGO	HKEX	HKD			2015-09-11 21:55:17.004615	2015-09-11 21:55:17.004615
+21	21	0	ERR1		P		00011	\N	\N	\N	\N	B	1000	LMT	1.200000	1000	LMT	1.200000	DAY	\N	0	0	0.000000	NO	NEW			150914-115212.225419					jli	CASH	hk_argo	ALGO	HKEX	HKD			2015-09-14 11:52:12.720656	2015-09-14 11:52:12.720656
+25	26	0	ERR1		P		00011	\N	\N	\N	\N	B	1000	LMT	1.200000	1000	LMT	1.200000	DAY	\N	0	1000	0.000000	AO	LIVE			150914-115215.852687					jli	CASH	hk_argo	ALGO	HKEX	HKD			2015-09-14 11:52:16.347548	2015-09-14 11:52:17.035035
+34	60	0	ERR1		P		00011	\N	\N	\N	\N	B	1000	LMT	1.200000	1000	LMT	1.200000	DAY	\N	0	0	0.000000	OUT	CXL	CXL		150914-115239.233117					jli	CASH	hk_argo	ALGO	HKEX	HKD			2015-09-14 11:52:39.725513	2015-09-14 11:52:41.823311
+26	29	0	ERR1		P		00011	\N	\N	\N	\N	B	1000	LMT	1.200000	1000	LMT	1.200000	DAY	\N	0	1000	0.000000	AO	LIVE	PCXL		150914-115217.251430					jli	CASH	hk_argo	ALGO	HKEX	HKD			2015-09-14 11:52:17.86405	2015-09-14 11:52:19.368969
+27	31	0	ERR1		P		00011	\N	\N	\N	\N	B	1000	LMT	1.200000	1000	LMT	1.200000	DAY	\N	0	1000	0.000000	AO	LIVE			150914-115219.580420					jli	CASH	hk_argo	ALGO	HKEX	HKD			2015-09-14 11:52:20.128682	2015-09-14 11:52:20.82496
+35	62	0	ERR1		P		00011	\N	\N	\N	\N	B	1000	LMT	1.200000	1000	LMT	1.200000	DAY	\N	0	0	0.000000	NO	NEW			150914-115242.727420					jli	CASH	hk_argo	ALGO	HKEX	HKD			2015-09-14 11:52:43.224296	2015-09-14 11:52:43.224296
+28	36	0	ERR1		P		00011	\N	\N	\N	\N	B	1000	LMT	1.200000	1000	LMT	1.200000	DAY	\N	0	0	0.000000	OUT	CXL	CXL		150914-115222.460436					jli	CASH	hk_argo	ALGO	HKEX	HKD			2015-09-14 11:52:22.946665	2015-09-14 11:52:25.024122
+36	65	0	ERR1		P		00011	\N	\N	\N	\N	B	1000	LMT	1.200000	1000	LMT	1.200000	DAY	\N	0	1000	0.000000	AO	LIVE			150914-115244.113420					jli	CASH	hk_argo	ALGO	HKEX	HKD			2015-09-14 11:52:44.598698	2015-09-14 11:52:45.288209
+46	117	0	ERR1		P		00011	\N	\N	\N	\N	B	1100	LMT	1.200000	1100	LMT	1.200000	DAY	\N	0	1100	0.000000	AR	LIVE			150914-115320.659717					jli	CASH	hk_argo	ALGO	HKEX	HKD			2015-09-14 11:53:21.202711	2015-09-14 11:53:23.309678
+29	41	0	ERR1		P		00011	\N	\N	\N	\N	B	1000	LMT	1.200000	1000	LMT	1.200000	DAY	\N	0	0	0.000000	OUT	CXL	CXL		150914-115225.234420					jli	CASH	hk_argo	ALGO	HKEX	HKD			2015-09-14 11:52:25.731623	2015-09-14 11:52:28.527594
+39	76	0	ERR1		P		00011	\N	\N	\N	\N	B	1000	LMT	1.200000	1000	LMT	1.200000	DAY	\N	1000	0	5.500000	NF	FILLED			150914-115252.613420					jli	CASH	hk_argo	ALGO	HKEX	HKD			2015-09-14 11:52:53.111449	2015-09-14 11:52:53.807531
+37	70	0	ERR1		P		00011	\N	\N	\N	\N	B	1000	LMT	1.200000	1000	LMT	1.200000	DAY	\N	0	0	0.000000	OUT	CXL	CXL		150914-115246.214418					jli	CASH	hk_argo	ALGO	HKEX	HKD			2015-09-14 11:52:46.711718	2015-09-14 11:52:48.780701
+30	45	0	ERR1		P		00011	\N	\N	\N	\N	B	1000	LMT	1.200000	1000	LMT	1.200000	DAY	\N	0	1000	0.000000	RC	LIVE	REJ		150914-115228.733419					jli	CASH	hk_argo	ALGO	HKEX	HKD		a-reject-cancel-msg	2015-09-14 11:52:29.232548	2015-09-14 11:52:31.326663
+31	48	0	ERR1		P		00011	\N	\N	\N	\N	B	1000	LMT	1.200000	1000	LMT	1.200000	DAY	\N	0	1000	0.000000	CO	LIVE	PCXL		150914-115231.569184					jli	CASH	hk_argo	ALGO	HKEX	HKD			2015-09-14 11:52:32.067691	2015-09-14 11:52:33.45954
+32	52	0	ERR1		P		00011	\N	\N	\N	\N	B	1000	LMT	1.200000	1000	LMT	1.200000	DAY	\N	0	1000	0.000000	CO	LIVE	PCXL		150914-115234.356420					jli	CASH	hk_argo	ALGO	HKEX	HKD			2015-09-14 11:52:34.842323	2015-09-14 11:52:36.236709
+33	55	0	ERR1		P		00011	\N	\N	\N	\N	B	1000	LMT	1.200000	1000	LMT	1.200000	DAY	\N	0	1000	0.000000	AO	LIVE			150914-115237.142418					jli	CASH	hk_argo	ALGO	HKEX	HKD			2015-09-14 11:52:37.629549	2015-09-14 11:52:38.330521
+38	73	0	ERR1		P		00011	\N	\N	\N	\N	B	1000	LMT	1.200000	1000	LMT	1.200000	DAY	\N	1000	0	1.000000	NF	FILLED			150914-115250.484422					jli	CASH	hk_argo	ALGO	HKEX	HKD			2015-09-14 11:52:51.016131	2015-09-14 11:52:51.710489
+43	102	0	ERR1		P		00011	\N	\N	\N	\N	B	1000	LMT	1.200000	1000	LMT	1.200000	DAY	\N	100	900	1.000000	NF	LIVE			150914-115310.837740					jli	CASH	hk_argo	ALGO	HKEX	HKD			2015-09-14 11:53:11.336042	2015-09-14 11:53:12.034457
+44	106	0	ERR1		P		00011	\N	\N	\N	\N	B	1000	LMT	1.200000	1000	LMT	1.200000	DAY	\N	1000	0	1.000000	NF	FILLED			150914-115313.638420					jli	CASH	hk_argo	ALGO	HKEX	HKD			2015-09-14 11:53:14.139933	2015-09-14 11:53:14.834863
+40	92	0	ERR1		P		00011	\N	\N	\N	\N	B	1000	LMT	1.200000	1000	LMT	1.200000	DAY	\N	200	0	1.500000	OUT	CXL	CXL		150914-115300.995419					jli	CASH	hk_argo	ALGO	HKEX	HKD			2015-09-14 11:53:01.497889	2015-09-14 11:53:04.9825
+50	133	0	ERR1		P		00011	\N	\N	\N	\N	B	1000	MKT	\N	1000	MKT	\N	DAY	\N	0	1000	0.000000	AR	LIVE			150914-115332.006968					jli	CASH	hk_argo	ALGO	HKEX	HKD			2015-09-14 11:53:32.502546	2015-09-14 11:53:34.603632
+45	112	0	ERR1		P		00011	\N	\N	\N	\N	B	1000	LMT	1.200000	1000	LMT	1.200000	DAY	\N	0	0	0.000000	OUT	CXL	CXL		150914-115316.448170					jli	CASH	hk_argo	ALGO	HKEX	HKD			2015-09-14 11:53:16.942773	2015-09-14 11:53:19.034916
+41	96	0	ERR1		P		00011	\N	\N	\N	\N	B	1000	LMT	1.200000	1000	LMT	1.200000	DAY	\N	1000	0	1.000000	NF	FILLED	PCXL		150914-115305.187594					jli	CASH	hk_argo	ALGO	HKEX	HKD			2015-09-14 11:53:05.681759	2015-09-14 11:53:07.78076
+42	99	0	ERR1		P		00011	\N	\N	\N	\N	B	1000	LMT	1.200000	1000	LMT	1.200000	DAY	\N	0	1000	0.000000	AO	LIVE			150914-115308.732420					jli	CASH	hk_argo	ALGO	HKEX	HKD			2015-09-14 11:53:09.227677	2015-09-14 11:53:09.921692
+47	121	0	ERR1		P		00011	\N	\N	\N	\N	B	1	LMT	1.200000	1	LMT	1.200000	DAY	\N	0	1	0.000000	AR	LIVE			150914-115323.516420					jli	CASH	hk_argo	ALGO	HKEX	HKD			2015-09-14 11:53:24.00782	2015-09-14 11:53:26.101879
+49	129	0	ERR1		P		00011	\N	\N	\N	\N	B	1000	LMT	0.010000	1000	LMT	0.010000	DAY	\N	0	1000	0.000000	AR	LIVE			150914-115329.109420					jli	CASH	hk_argo	ALGO	HKEX	HKD			2015-09-14 11:53:29.604648	2015-09-14 11:53:31.80189
+55	155	0	ERR1		P		00011	\N	\N	\N	\N	B	1000	LMT	1.200000	1000	LMT	1.200000	DAY	\N	0	1000	0.000000	RR	LIVE		REJ	150914-115347.355420					jli	CASH	hk_argo	ALGO	HKEX	HKD		too-late	2015-09-14 11:53:47.857429	2015-09-14 11:53:49.946701
+48	125	0	ERR1		P		00011	\N	\N	\N	\N	B	1000	LMT	2.000000	1000	LMT	2.000000	DAY	\N	0	1000	0.000000	AR	LIVE			150914-115326.308424					jli	CASH	hk_argo	ALGO	HKEX	HKD			2015-09-14 11:53:26.812896	2015-09-14 11:53:28.900763
+54	151	0	ERR1		P		00011	\N	\N	\N	\N	B	100	LMT	0.010000	100	LMT	0.010000	DAY	\N	100	0	1.000000	AR	CXL	CXL		150914-115343.862421					jli	CASH	hk_argo	ALGO	HKEX	HKD			2015-09-14 11:53:44.36401	2015-09-14 11:53:47.151855
+52	141	0	ERR1		P		00011	\N	\N	\N	\N	B	1	LMT	0.010000	1	LMT	0.010000	DAY	\N	0	1	0.000000	AR	LIVE			150914-115337.599590					jli	CASH	hk_argo	ALGO	HKEX	HKD			2015-09-14 11:53:38.092185	2015-09-14 11:53:40.163688
+51	137	0	ERR1		P		00011	\N	\N	\N	\N	B	1000	LMT	1.200000	1000	LMT	1.200000	DAY	\N	0	1000	0.000000	AR	LIVE			150914-115334.812420					jli	CASH	hk_argo	ALGO	HKEX	HKD			2015-09-14 11:53:35.297218	2015-09-14 11:53:37.39773
+53	146	0	ERR1		P		00011	\N	\N	\N	\N	B	101	LMT	0.010000	101	LMT	0.010000	DAY	\N	100	1	1.000000	AR	LIVE			150914-115340.370421					jli	CASH	hk_argo	ALGO	HKEX	HKD			2015-09-14 11:53:40.862019	2015-09-14 11:53:43.661766
+56	159	0	ERR1		P		00011	\N	\N	\N	\N	B	1000	LMT	1.200000	1000	LMT	1.200000	DAY	\N	0	1000	0.000000	RR	LIVE		REJ	150914-115350.152250					jli	CASH	hk_argo	ALGO	HKEX	HKD		bad-px	2015-09-14 11:53:50.652767	2015-09-14 11:53:52.871262
+57	163	0	ERR1		P		00011	\N	\N	\N	\N	B	1000	LMT	1.200000	101	LMT	1.200000	DAY	\N	1000	0	1.000000	NF	FILLED		PRPL	150914-115353.075419					jli	CASH	hk_argo	ALGO	HKEX	HKD			2015-09-14 11:53:53.565548	2015-09-14 11:53:55.672236
+73	207	0	ERR1		P		00011	\N	\N	\N	\N	B	1000	LMT	1.200000	1000	LMT	1.200000	DAY	\N	1000	0	1.000000	NF	FILLED			150915-002146.293899					jli	CASH	hk_argo	ALGO	HKEX	HKD			2015-09-15 00:21:46.790989	2015-09-15 00:21:47.48904
+58	168	0	ERR1		P		00011	\N	\N	\N	\N	B	1	LMT	1.200000	1	LMT	1.200000	DAY	\N	0	1	0.000000	AR	LIVE			150914-115356.578419					jli	CASH	hk_argo	ALGO	HKEX	HKD			2015-09-14 11:53:57.074284	2015-09-14 11:53:59.15653
+59	170	0	ERR1		P		00011	\N	\N	\N	\N	B	1000	LMT	1.200000	1000	LMT	1.200000	DAY	\N	0	1000	0.000000	AO	LIVE			150914-115359.372915					jli	CASH	hk_argo	ALGO	HKEX	HKD			2015-09-14 11:53:59.875683	2015-09-14 11:54:00.561701
+60	173	0	ERR1		P		00011	\N	\N	\N	\N	B	1000	LMT	1.200000	1000	LMT	1.200000	DAY	\N	100	900	1.000000	NF	LIVE			150914-115401.468927					jli	CASH	hk_argo	ALGO	HKEX	HKD			2015-09-14 11:54:01.97003	2015-09-14 11:54:02.672838
+61	177	0	ERR1		P		00011	\N	\N	\N	\N	B	1000	LMT	1.200000	1000	LMT	1.200000	DAY	\N	1000	0	1.000000	NF	FILLED			150914-115404.272462					jli	CASH	hk_argo	ALGO	HKEX	HKD			2015-09-14 11:54:04.759503	2015-09-14 11:54:05.454673
+74	210	0	ERR1		P		00011	\N	\N	\N	\N	B	1000	LMT	1.200000	1000	LMT	1.200000	DAY	\N	1000	0	1.000000	NF	FILLED			150915-002212.631741					jli	CASH	hk_argo	ALGO	HKEX	HKD			2015-09-15 00:22:13.126041	2015-09-15 00:22:13.835821
+62	183	0	ERR1		P		00011	\N	\N	\N	\N	B	1000	LMT	1.200000	1000	LMT	1.200000	DAY	\N	0	0	0.000000	OUT	CXL	CXL		150914-115407.075424					jli	CASH	hk_argo	ALGO	HKEX	HKD			2015-09-14 11:54:07.566535	2015-09-14 11:54:09.659976
+63	187	0	ERR1		P		00011	\N	\N	\N	\N	B	1000	LMT	1.200000	1000	LMT	1.200000	DAY	\N	0	1000	0.000000	CO	LIVE	PCXL		150914-115410.570420					jli	CASH	hk_argo	ALGO	HKEX	HKD			2015-09-14 11:54:11.08406	2015-09-14 11:54:12.706703
+75	214	0	ERR1		P		00011	\N	\N	\N	\N	B	1000	LMT	1.200000	1000	LMT	1.200000	DAY	\N	1000	0	1.000000	NF	FILLED			150915-002312.882049					jli	CASH	hk_argo	ALGO	HKEX	HKD			2015-09-15 00:23:13.373895	2015-09-15 00:23:14.073035
+64	191	0	ERR1		P		00011	\N	\N	\N	\N	B	1000	LMT	1.200000	1000	MKT	\N	DAY	\N	0	1000	0.000000	RPL	LIVE		PRPL	150914-115413.605421					jli	CASH	hk_argo	ALGO	HKEX	HKD			2015-09-14 11:54:14.102746	2015-09-14 11:54:15.491486
+65	194	0	ERR1		P		00011	\N	\N	\N	\N	B	1000	LMT	1.200000	1000	LMT	1.200000	DAY	\N	0	1000	0.000000	AO	LIVE			150914-115416.395239					jli	CASH	hk_argo	ALGO	HKEX	HKD			2015-09-14 11:54:16.890831	2015-09-14 11:54:17.588863
+66	196	0	ERR1		P		00011	\N	\N	\N	\N	B	1000	LMT	1.200000	1000	LMT	1.200000	DAY	\N	0	0	0.000000	NO	NEW			150914-121612.591415					jli	CASH	hk_argo	ALGO	HKEX	HKD			2015-09-14 12:16:13.088432	2015-09-14 12:16:13.088432
+67	197	0	ERR1		P		00011	\N	\N	\N	\N	B	1000	LMT	1.200000	1000	LMT	1.200000	DAY	\N	0	0	0.000000	NO	NEW			150914-121711.651336					jli	CASH	hk_argo	ALGO	HKEX	HKD			2015-09-14 12:17:12.146608	2015-09-14 12:17:12.146608
+68	198	0	ERR1		P		00011	\N	\N	\N	\N	B	1000	LMT	1.200000	1000	LMT	1.200000	DAY	\N	0	0	0.000000	NO	NEW			150914-121755.161416					jli	CASH	hk_argo	ALGO	HKEX	HKD			2015-09-14 12:17:55.659502	2015-09-14 12:17:55.659502
+69	199	0	ERR1		P		00011	\N	\N	\N	\N	B	1000	LMT	1.200000	1000	LMT	1.200000	DAY	\N	0	0	0.000000	NO	NEW			150914-121832.556429					jli	CASH	hk_argo	ALGO	HKEX	HKD			2015-09-14 12:18:33.059474	2015-09-14 12:18:33.059474
+70	201	0	ERR1		P		00011	\N	\N	\N	\N	B	1000	LMT	1.200000	1000	LMT	1.200000	DAY	\N	0	0	0.000000	RO	REJ			150914-121906.052603					jli	CASH	hk_argo	ALGO	HKEX	HKD		bad-client	2015-09-14 12:19:06.576868	2015-09-14 12:19:07.281597
+71	203	0	ERR1		P		00011	\N	\N	\N	\N	B	1000	LMT	1.200000	1000	LMT	1.200000	DAY	\N	0	0	0.000000	RO	REJ			150915-001855.545759					jli	CASH	hk_argo	ALGO	HKEX	HKD		bad-client	2015-09-15 00:18:56.045919	2015-09-15 00:18:56.73741
+72	205	0	ERR1		P		00011	\N	\N	\N	\N	B	1000	LMT	1.200000	1000	LMT	1.200000	DAY	\N	0	0	0.000000	RO	REJ			150915-001856.944102					jli	CASH	hk_argo	ALGO	HKEX	HKD		bad-client	2015-09-15 00:18:57.439634	2015-09-15 00:18:58.154882
+76	220	0	ERR1		P		00011	\N	\N	\N	\N	B	1000	LMT	1.200000	1000	LMT	1.200000	DAY	\N	0	0	0.000000	OUT	CXL	CXL		150915-002315.682755					jli	CASH	hk_argo	ALGO	HKEX	HKD			2015-09-15 00:23:16.178036	2015-09-15 00:23:18.25188
+78	224	0	ERR1		P		00011	\N	\N	\N	\N	B	1000	LMT	1.200000	1000	LMT	1.200000	DAY	\N	0	1000	0.000000	AO	LIVE			150919-132107.695802					jli	CASH	hk_argo	ALGO	HKEX	HKD			2015-09-19 13:21:08.014496	2015-09-19 13:21:39.009348
+\.
+
+
+--
+-- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY users (uid, pwd, select_priv, insert_priv, subscr_priv, pwd_expired) FROM stdin;
+opes_uid 	8ca62eb573d080151dee5f7b0abc3dca	t	t	t	f
+\.
+
+
+--
+-- Name: django_migrations_pkey; Type: CONSTRAINT; Schema: public; Owner: opes; Tablespace: 
+--
+
+ALTER TABLE ONLY django_migrations
+    ADD CONSTRAINT django_migrations_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: fill_create_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY fill_create
+    ADD CONSTRAINT fill_create_pkey PRIMARY KEY (seqnum);
+
+
+--
+-- Name: fill_transaction_log_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY fill_transaction_log
+    ADD CONSTRAINT fill_transaction_log_pkey PRIMARY KEY (seqnum);
+
+
+--
+-- Name: fills_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY fills
+    ADD CONSTRAINT fills_pkey PRIMARY KEY (ofid);
+
+
+--
+-- Name: order_accept_replace_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY order_accept_replace
+    ADD CONSTRAINT order_accept_replace_pkey PRIMARY KEY (seqnum);
+
+
+--
+-- Name: order_ack_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY order_ack
+    ADD CONSTRAINT order_ack_pkey PRIMARY KEY (seqnum);
+
+
+--
+-- Name: order_cancel_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY order_cancel
+    ADD CONSTRAINT order_cancel_pkey PRIMARY KEY (seqnum);
+
+
+--
+-- Name: order_close_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY order_close
+    ADD CONSTRAINT order_close_pkey PRIMARY KEY (seqnum);
+
+
+--
+-- Name: order_create_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY order_create
+    ADD CONSTRAINT order_create_pkey PRIMARY KEY (seqnum);
+
+
+--
+-- Name: order_out_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY order_out
+    ADD CONSTRAINT order_out_pkey PRIMARY KEY (seqnum);
+
+
+--
+-- Name: order_reject_cancel_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY order_reject_cancel
+    ADD CONSTRAINT order_reject_cancel_pkey PRIMARY KEY (seqnum);
+
+
+--
+-- Name: order_reject_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY order_reject
+    ADD CONSTRAINT order_reject_pkey PRIMARY KEY (seqnum);
+
+
+--
+-- Name: order_reject_replace_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY order_reject_replace
+    ADD CONSTRAINT order_reject_replace_pkey PRIMARY KEY (seqnum);
+
+
+--
+-- Name: order_replace_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY order_replace
+    ADD CONSTRAINT order_replace_pkey PRIMARY KEY (seqnum);
+
+
+--
+-- Name: order_transaction_log_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY order_transaction_log
+    ADD CONSTRAINT order_transaction_log_pkey PRIMARY KEY (seqnum);
+
+
+--
+-- Name: orders_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY orders
+    ADD CONSTRAINT orders_pkey PRIMARY KEY (ooid);
+
+
+--
+-- Name: users_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY users
+    ADD CONSTRAINT users_pkey PRIMARY KEY (uid);
+
+
+--
+-- Name: fill_create_ofid_idx; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX fill_create_ofid_idx ON fill_create USING btree (ofid);
+
+
+--
+-- Name: fill_transaction_log_ofid_idx; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX fill_transaction_log_ofid_idx ON fill_transaction_log USING btree (ofid);
+
+
+--
+-- Name: fills_ooid_idx; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX fills_ooid_idx ON fills USING btree (ooid);
+
+
+--
+-- Name: fills_pfid_idx; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX fills_pfid_idx ON fills USING btree (pfid);
+
+
+--
+-- Name: order_accept_replace_ooid_idx; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX order_accept_replace_ooid_idx ON order_accept_replace USING btree (ooid);
+
+
+--
+-- Name: order_ack_ooid_idx; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX order_ack_ooid_idx ON order_ack USING btree (ooid);
+
+
+--
+-- Name: order_cancel_ooid_idx; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX order_cancel_ooid_idx ON order_cancel USING btree (ooid);
+
+
+--
+-- Name: order_close_ooid_idx; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX order_close_ooid_idx ON order_close USING btree (ooid);
+
+
+--
+-- Name: order_create_ooid_idx; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX order_create_ooid_idx ON order_create USING btree (ooid);
+
+
+--
+-- Name: order_out_ooid_idx; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX order_out_ooid_idx ON order_out USING btree (ooid);
+
+
+--
+-- Name: order_reject_cancel_ooid_idx; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX order_reject_cancel_ooid_idx ON order_reject_cancel USING btree (ooid);
+
+
+--
+-- Name: order_reject_ooid_idx; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX order_reject_ooid_idx ON order_reject USING btree (ooid);
+
+
+--
+-- Name: order_reject_replace_ooid_idx; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX order_reject_replace_ooid_idx ON order_reject_replace USING btree (ooid);
+
+
+--
+-- Name: order_replace_ooid_idx; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX order_replace_ooid_idx ON order_replace USING btree (ooid);
+
+
+--
+-- Name: order_transaction_log_ooid_idx; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX order_transaction_log_ooid_idx ON order_transaction_log USING btree (ooid);
+
+
+--
+-- Name: orders_poid_idx; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX orders_poid_idx ON orders USING btree (poid);
+
+
+--
+-- Name: public; Type: ACL; Schema: -; Owner: postgres
+--
+
+REVOKE ALL ON SCHEMA public FROM PUBLIC;
+REVOKE ALL ON SCHEMA public FROM postgres;
+GRANT ALL ON SCHEMA public TO postgres;
+GRANT ALL ON SCHEMA public TO PUBLIC;
+
+
+--
+-- Name: fill_create; Type: ACL; Schema: public; Owner: postgres
+--
+
+REVOKE ALL ON TABLE fill_create FROM PUBLIC;
+REVOKE ALL ON TABLE fill_create FROM postgres;
+GRANT ALL ON TABLE fill_create TO postgres;
+GRANT SELECT,INSERT ON TABLE fill_create TO opes;
+
+
+--
+-- Name: fill_transaction_log; Type: ACL; Schema: public; Owner: postgres
+--
+
+REVOKE ALL ON TABLE fill_transaction_log FROM PUBLIC;
+REVOKE ALL ON TABLE fill_transaction_log FROM postgres;
+GRANT ALL ON TABLE fill_transaction_log TO postgres;
+GRANT SELECT,INSERT ON TABLE fill_transaction_log TO opes;
+
+
+--
+-- Name: fills; Type: ACL; Schema: public; Owner: postgres
+--
+
+REVOKE ALL ON TABLE fills FROM PUBLIC;
+REVOKE ALL ON TABLE fills FROM postgres;
+GRANT ALL ON TABLE fills TO postgres;
+GRANT SELECT,INSERT,UPDATE ON TABLE fills TO opes;
+
+
+--
+-- Name: ofids; Type: ACL; Schema: public; Owner: postgres
+--
+
+REVOKE ALL ON SEQUENCE ofids FROM PUBLIC;
+REVOKE ALL ON SEQUENCE ofids FROM postgres;
+GRANT ALL ON SEQUENCE ofids TO postgres;
+GRANT SELECT,USAGE ON SEQUENCE ofids TO opes;
+
+
+--
+-- Name: ooids; Type: ACL; Schema: public; Owner: postgres
+--
+
+REVOKE ALL ON SEQUENCE ooids FROM PUBLIC;
+REVOKE ALL ON SEQUENCE ooids FROM postgres;
+GRANT ALL ON SEQUENCE ooids TO postgres;
+GRANT SELECT,USAGE ON SEQUENCE ooids TO opes;
+
+
+--
+-- Name: order_accept_replace; Type: ACL; Schema: public; Owner: postgres
+--
+
+REVOKE ALL ON TABLE order_accept_replace FROM PUBLIC;
+REVOKE ALL ON TABLE order_accept_replace FROM postgres;
+GRANT ALL ON TABLE order_accept_replace TO postgres;
+GRANT SELECT,INSERT ON TABLE order_accept_replace TO opes;
+
+
+--
+-- Name: order_ack; Type: ACL; Schema: public; Owner: postgres
+--
+
+REVOKE ALL ON TABLE order_ack FROM PUBLIC;
+REVOKE ALL ON TABLE order_ack FROM postgres;
+GRANT ALL ON TABLE order_ack TO postgres;
+GRANT SELECT,INSERT ON TABLE order_ack TO opes;
+
+
+--
+-- Name: order_cancel; Type: ACL; Schema: public; Owner: postgres
+--
+
+REVOKE ALL ON TABLE order_cancel FROM PUBLIC;
+REVOKE ALL ON TABLE order_cancel FROM postgres;
+GRANT ALL ON TABLE order_cancel TO postgres;
+GRANT SELECT,INSERT ON TABLE order_cancel TO opes;
+
+
+--
+-- Name: order_close; Type: ACL; Schema: public; Owner: postgres
+--
+
+REVOKE ALL ON TABLE order_close FROM PUBLIC;
+REVOKE ALL ON TABLE order_close FROM postgres;
+GRANT ALL ON TABLE order_close TO postgres;
+GRANT SELECT,INSERT ON TABLE order_close TO opes;
+
+
+--
+-- Name: order_create; Type: ACL; Schema: public; Owner: postgres
+--
+
+REVOKE ALL ON TABLE order_create FROM PUBLIC;
+REVOKE ALL ON TABLE order_create FROM postgres;
+GRANT ALL ON TABLE order_create TO postgres;
+GRANT SELECT,INSERT ON TABLE order_create TO opes;
+
+
+--
+-- Name: order_out; Type: ACL; Schema: public; Owner: postgres
+--
+
+REVOKE ALL ON TABLE order_out FROM PUBLIC;
+REVOKE ALL ON TABLE order_out FROM postgres;
+GRANT ALL ON TABLE order_out TO postgres;
+GRANT SELECT,INSERT ON TABLE order_out TO opes;
+
+
+--
+-- Name: order_reject; Type: ACL; Schema: public; Owner: postgres
+--
+
+REVOKE ALL ON TABLE order_reject FROM PUBLIC;
+REVOKE ALL ON TABLE order_reject FROM postgres;
+GRANT ALL ON TABLE order_reject TO postgres;
+GRANT SELECT,INSERT ON TABLE order_reject TO opes;
+
+
+--
+-- Name: order_reject_cancel; Type: ACL; Schema: public; Owner: postgres
+--
+
+REVOKE ALL ON TABLE order_reject_cancel FROM PUBLIC;
+REVOKE ALL ON TABLE order_reject_cancel FROM postgres;
+GRANT ALL ON TABLE order_reject_cancel TO postgres;
+GRANT SELECT,INSERT ON TABLE order_reject_cancel TO opes;
+
+
+--
+-- Name: order_reject_replace; Type: ACL; Schema: public; Owner: postgres
+--
+
+REVOKE ALL ON TABLE order_reject_replace FROM PUBLIC;
+REVOKE ALL ON TABLE order_reject_replace FROM postgres;
+GRANT ALL ON TABLE order_reject_replace TO postgres;
+GRANT SELECT,INSERT ON TABLE order_reject_replace TO opes;
+
+
+--
+-- Name: order_replace; Type: ACL; Schema: public; Owner: postgres
+--
+
+REVOKE ALL ON TABLE order_replace FROM PUBLIC;
+REVOKE ALL ON TABLE order_replace FROM postgres;
+GRANT ALL ON TABLE order_replace TO postgres;
+GRANT SELECT,INSERT ON TABLE order_replace TO opes;
+
+
+--
+-- Name: order_transaction_log; Type: ACL; Schema: public; Owner: postgres
+--
+
+REVOKE ALL ON TABLE order_transaction_log FROM PUBLIC;
+REVOKE ALL ON TABLE order_transaction_log FROM postgres;
+GRANT ALL ON TABLE order_transaction_log TO postgres;
+GRANT SELECT,INSERT ON TABLE order_transaction_log TO opes;
+
+
+--
+-- Name: orders; Type: ACL; Schema: public; Owner: postgres
+--
+
+REVOKE ALL ON TABLE orders FROM PUBLIC;
+REVOKE ALL ON TABLE orders FROM postgres;
+GRANT ALL ON TABLE orders TO postgres;
+GRANT SELECT,INSERT,UPDATE ON TABLE orders TO opes;
+
+
+--
+-- Name: seqnums; Type: ACL; Schema: public; Owner: postgres
+--
+
+REVOKE ALL ON SEQUENCE seqnums FROM PUBLIC;
+REVOKE ALL ON SEQUENCE seqnums FROM postgres;
+GRANT ALL ON SEQUENCE seqnums TO postgres;
+GRANT SELECT,USAGE ON SEQUENCE seqnums TO opes;
+
+
+--
+-- Name: users; Type: ACL; Schema: public; Owner: postgres
+--
+
+REVOKE ALL ON TABLE users FROM PUBLIC;
+REVOKE ALL ON TABLE users FROM postgres;
+GRANT ALL ON TABLE users TO postgres;
+GRANT SELECT ON TABLE users TO opes;
+
+
+--
+-- PostgreSQL database dump complete
+--
+
